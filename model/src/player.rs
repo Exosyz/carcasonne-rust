@@ -1,4 +1,4 @@
-#[derive(Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Debug, Default, Eq, Hash, PartialEq, Clone)]
 pub struct Player {
     name: String,
 }
@@ -9,23 +9,17 @@ pub struct PlayerBuilder {
 }
 
 impl PlayerBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn name(&mut self, name: String) -> &Self {
+    pub fn name(&mut self, name: String) -> &mut Self {
         self.name = name;
         self
     }
 
-    pub fn quantity(&mut self, quantity: usize) -> &Self {
+    pub fn quantity(&mut self, quantity: usize) -> &mut Self {
         self.quantity = quantity;
         self
     }
 
-    pub fn build(&self) -> Player {
-        Player {
-            name: self.name.clone(),
-        }
+    pub fn build(self, player: &mut Player) {
+        player.name = self.name;
     }
 }

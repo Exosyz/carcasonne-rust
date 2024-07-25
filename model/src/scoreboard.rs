@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::player::Player;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ScoreBoard {
     scores: HashMap<Player, usize>,
 }
@@ -13,18 +13,12 @@ pub struct ScoreBoardBuilder {
 }
 
 impl ScoreBoardBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn addPlayer(mut self, player: Player) -> ScoreBoardBuilder {
+    pub fn add_player(mut self, player: Player) -> ScoreBoardBuilder {
         self.scores.insert(player, 0);
         self
     }
 
-    pub fn build(self) -> ScoreBoard {
-        ScoreBoard {
-            scores: self.scores,
-        }
+    pub fn build(self, score_board: &mut ScoreBoard) {
+        score_board.scores = self.scores;
     }
 }

@@ -1,6 +1,6 @@
 use crate::tile::Tile;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Board {
     tiles: Vec<Vec<Tile>>,
 }
@@ -13,11 +13,7 @@ pub struct BoardBuilder {
 }
 
 impl BoardBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn build(self) -> Board {
-        Board { tiles: self.tiles }
+    pub fn build(self, board: &mut Board) {
+        board.tiles = self.tiles;
     }
 }

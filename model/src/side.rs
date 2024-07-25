@@ -21,24 +21,18 @@ pub struct SideBuilder {
 }
 
 impl SideBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn section(mut self, section: usize) -> Self {
+    pub fn section(&mut self, section: usize) -> &mut Self {
         self.section = section;
         self
     }
 
-    pub fn kind(mut self, kind: SideKind) -> Self {
+    pub fn kind(&mut self, kind: SideKind) -> &mut Self {
         self.kind = kind;
         self
     }
 
-    pub fn build(self) -> Side {
-        Side {
-            section: self.section,
-            kind: self.kind,
-        }
+    pub fn build(self, side: &mut Side) {
+        side.section = self.section;
+        side.kind = self.kind;
     }
 }

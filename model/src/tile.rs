@@ -1,4 +1,4 @@
-use crate::side::Side;
+use crate::side::{Side, SideBuilder};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub enum TileExtension {
@@ -19,7 +19,7 @@ pub struct Tile {
 
 impl Tile {}
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct TileBuilder {
     north: Side,
     south: Side,
@@ -29,42 +29,57 @@ pub struct TileBuilder {
 }
 
 impl TileBuilder {
-    pub fn new() -> Self {
-        Self::default()
+    fn build_side(side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder) -> Side {
+        let mut builder = SideBuilder::default();
+        side_builder(&mut builder);
+
+        let mut side = Side::default();
+        builder.build(&mut side);
+        side
     }
 
-    pub fn north(mut self, north: Side) -> Self {
-        self.north = north;
+    pub fn north(
+        &mut self,
+        side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
+    ) -> &mut Self {
+        self.north = Self::build_side(side_builder);
         self
     }
 
-    pub fn south(mut self, south: Side) -> Self {
-        self.south = south;
+    pub fn south(
+        &mut self,
+        side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
+    ) -> &mut Self {
+        self.south = Self::build_side(side_builder);
         self
     }
 
-    pub fn east(mut self, east: Side) -> Self {
-        self.east = east;
+    pub fn east(
+        &mut self,
+        side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
+    ) -> &mut Self {
+        self.east = Self::build_side(side_builder);
         self
     }
 
-    pub fn west(mut self, west: Side) -> Self {
-        self.west = west;
+    pub fn west(
+        &mut self,
+        side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
+    ) -> &mut Self {
+        self.west = Self::build_side(side_builder);
         self
     }
 
-    pub fn tile_extension(mut self, tile_extension: TileExtension) -> Self {
+    pub fn tile_extension(&mut self, tile_extension: TileExtension) -> &mut Self {
         self.tile_extension = tile_extension;
         self
     }
 
-    pub fn build(self) -> Tile {
-        Tile {
-            north: self.north,
-            south: self.south,
-            east: self.east,
-            west: self.west,
-            tile_extension: self.tile_extension,
-        }
+    pub fn build(self, tile: &mut Tile) {
+        tile.north = self.north;
+        tile.south = self.south;
+        tile.east = self.east;
+        tile.west = self.west;
+        tile.tile_extension = self.tile_extension;
     }
 }
