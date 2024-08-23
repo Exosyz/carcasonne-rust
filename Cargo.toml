@@ -2,5 +2,7 @@
 
 members = [
     "model",
-    "game"
-, "misc"]
+    "game",
+    "misc",
+    "api"
+]
