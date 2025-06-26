@@ -1,5 +1,21 @@
+//! This module defines the `Tile`, `TileBuilder`, `TileExtension` enums and structs.
 use crate::side::{Side, SideBuilder};
 
+/// An enumeration representing the possible extensions that can be associated with a tile.
+///
+/// # Variants
+///
+/// * `None` - The default value, indicating no extension is present.
+/// * `TownShield(usize)` - Represents a town shield extension. It holds a `usize` value,
+///   which can be used to carry additional custom data (e.g., a shield identifier or count).
+/// * `Abbey` - Represents an abbey extension.
+///
+/// # Attributes
+///
+/// * `Debug` - Enables formatting of the enum for debugging purposes.
+/// * `Default` - Provides a default value, which is `None`.
+/// * `Copy` - Allows the enum to be duplicated through a bitwise copy.
+/// * `Clone` - Provides the ability to explicitly clone the enum.
 #[derive(Debug, Default, Copy, Clone)]
 pub enum TileExtension {
     #[default]
@@ -8,6 +24,29 @@ pub enum TileExtension {
     Abbey,
 }
 
+/// A struct representing a tile in a grid or board, with defined sides and a potential tile extension.
+///
+/// This struct is marked with the following traits:
+/// - `Debug`: Enables formatting of the struct using the `{:?}` format.
+/// - `Default`: Provides a default value for the struct, where each field is initialized to its
+///   respective default value.
+/// - `Copy`: Allows the `Tile` struct to be copied instead of moved.
+/// - `Clone`: Allows the `Tile` struct to be explicitly cloned.
+///
+/// # Fields
+/// - `north` (`Side`): The northern side of the tile.
+/// - `south` (`Side`): The southern side of the tile.
+/// - `east` (`Side`): The eastern side of the tile.
+/// - `west` (`Side`): The western side of the tile.
+/// - `tile_extension` (`TileExtension`): Additional information or properties associated with the tile.
+///
+/// # Example
+/// ```
+/// use model::tile::Tile;
+///
+/// let tile = Tile::default();
+/// println!("{:?}", tile);
+/// ```
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Tile {
     north: Side,
@@ -17,8 +56,26 @@ pub struct Tile {
     tile_extension: TileExtension,
 }
 
-impl Tile {}
-
+/// A builder struct for constructing tile objects with configurable sides and
+/// optional tile extensions.
+///
+/// # Fields
+/// * `north` - The northern Side configuration of the tile.
+/// * `south` - The southern Side configuration of the tile.
+/// * `east` - The eastern Side configuration of the tile.
+/// * `west` - The western Side configuration of the tile.
+/// * `tile_extension` - An optional extension to provide additional properties or
+///   behavior for the tile.
+///
+/// # Derives
+/// * `Default` - The `TileBuilder` struct can be instantiated with default values
+///   for all fields.
+/// * `Clone` - Allows creating a duplicate instance of a `TileBuilder`.
+///
+/// # Usage
+/// The `TileBuilder` offers a structured approach to configure and build tile
+/// structures by specifying the attributes for each tile side along with any
+/// additional extensions as needed.
 #[derive(Default, Clone)]
 pub struct TileBuilder {
     north: Side,
@@ -29,15 +86,66 @@ pub struct TileBuilder {
 }
 
 impl TileBuilder {
-    fn build_side(side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder) -> Side {
+    /// Builds a `Side` instance using the provided builder function.
+    ///
+    /// This function simplifies the process of creating a `Side` by allowing the caller to specify
+    /// a closure or function that configures the `SideBuilder`. The closure is called with a mutable
+    /// reference to the `SideBuilder`, which can be customized as needed to define the desired
+    /// `Side` properties. Once the customization is complete, the builder constructs the `Side` object.
+    ///
+    /// # Arguments
+    ///
+    /// * `side_builder` - A closure or function that takes a mutable reference to a `SideBuilder`
+    /// and returns a mutable reference to the same `SideBuilder` after configuration.
+    ///
+    /// # Returns
+    ///
+    /// * `Side` - The constructed `Side` instance with the specified configuration.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use model::tile::TileBuilder;
+    ///
+    /// let side = TileBuilder::build_side(|builder| {
+    ///     builder.set_property1("value1")
+    ///            .set_property2("value2")
+    /// });
+    /// ```
+    ///
+    /// In this example, the `SideBuilder::set_property1` and `set_property2` methods would
+    /// configure the builder, and the resulting configured `Side` is returned.
+    pub fn build_side(side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder) -> Side {
         let mut builder = SideBuilder::default();
         side_builder(&mut builder);
 
-        let mut side = Side::default();
-        builder.build(&mut side);
-        side
+        builder.build()
     }
 
+    /// Sets the north side of an object using a provided `SideBuilder` closure.
+    ///
+    /// This function allows the user to define the north side of a structure
+    /// by passing a closure that takes a mutable reference to a `SideBuilder`,
+    /// which can be used to configure the side. Once the closure is executed,
+    /// the configured side is assigned to the `north` property of the object.
+    ///
+    /// # Arguments
+    ///
+    /// * `side_builder` - A closure that takes a mutable reference to a
+    ///   `SideBuilder` and returns an updated mutable reference to it.
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to `Self` to allow method chaining.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use model::tile::TileBuilder;
+    ///
+    /// let mut builder = TileBuilder::default();
+    /// builder.north(|side| side.set_color("red").set_width(10));
+    /// ```
     pub fn north(
         &mut self,
         side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
@@ -46,6 +154,37 @@ impl TileBuilder {
         self
     }
 
+    /// Sets the `south` side of the current object using a custom builder.
+    ///
+    /// This method allows you to define or modify the `south` side of an object by passing a closure
+    /// that operates on a `SideBuilder`. The closure provides a convenient way to customize the side
+    /// configuration. Once the closure is executed, the result is stored as the `south` side of the object.
+    ///
+    /// # Arguments
+    ///
+    /// * `side_builder` - A closure that accepts a mutable reference to a `SideBuilder` and outputs
+    ///     the modified `SideBuilder`. This is used to configure the `south` side.
+    ///
+    /// # Returns
+    ///
+    /// Returns `&mut Self`, allowing method chaining to configure additional properties of the object.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use model::tile::TileBuilder;
+    ///
+    /// let mut builder = TileBuilder::default();
+    /// builder.south(|side| side.set_width(10).set_color("red"));
+    /// ```
+    ///
+    /// In this example, the `south` side is configured with a width of 10 and a color of "red", and
+    /// the method can be chained to further customize or configure the object.
+    ///
+    /// # Notes
+    ///
+    /// This method depends on an internal function `Self::build_side` to create the configuration for
+    /// the `south` side.
     pub fn south(
         &mut self,
         side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
@@ -54,6 +193,32 @@ impl TileBuilder {
         self
     }
 
+    /// Configures the east side of the object with the given builder function.
+    ///
+    /// This method takes a closure or other function-like object that operates
+    /// on a `SideBuilder` to configure the properties of the east side. Once the
+    /// side is built, the configuration will be assigned to the `east` field of
+    /// the object.
+    ///
+    /// # Parameters
+    /// - `side_builder`: A function or closure that receives a mutable reference
+    ///   to a `SideBuilder` and returns a mutable reference to the same `SideBuilder`
+    ///   after applying the desired configuration.
+    ///
+    /// # Returns
+    /// Returns a mutable reference to `self` to allow method chaining.
+    ///
+    /// # Example
+    /// ```
+    /// use model::tile::TileBuilder;
+    ///
+    /// let tile = TileBuilder::default()
+    ///     .east(|builder| builder.set_color("red").set_size(10))
+    ///     .build();
+    /// ```
+    ///
+    /// In this example, the `east` side of `object` is configured with the given
+    /// properties using the `SideBuilder`.
     pub fn east(
         &mut self,
         side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
@@ -62,6 +227,30 @@ impl TileBuilder {
         self
     }
 
+    /// Sets the western side of the structure using the provided `side_builder` function.
+    ///
+    /// This method takes a closure or function implementing the `FnOnce` trait, which is used
+    /// to configure a `SideBuilder` instance for the western side. The resulting `SideBuilder`
+    /// configuration is then assigned to the `west` attribute of the current structure.
+    ///
+    /// # Arguments
+    /// * `side_builder` - A closure or function that accepts a mutable reference to a `SideBuilder`
+    ///   and returns a mutable reference to it after applying the desired configurations.
+    ///
+    /// # Returns
+    /// A mutable reference to `Self`, allowing for method chaining and further configuration.
+    ///
+    /// # Example
+    /// ```rust
+    /// use model::tile::TileBuilder;
+    ///
+    /// let tile = TileBuilder::default()
+    ///     .west(|side| side.set_color("blue").add_window(2))
+    ///     .build();
+    /// ```
+    ///
+    /// In this example, the `west` method is called to set the color and number of windows
+    /// on the western side of the structure.
     pub fn west(
         &mut self,
         side_builder: impl FnOnce(&mut SideBuilder) -> &mut SideBuilder,
@@ -70,16 +259,62 @@ impl TileBuilder {
         self
     }
 
+    /// Sets the tile extension for the current object.
+    ///
+    /// This method updates the `tile_extension` property with the provided value
+    /// and allows for method chaining by returning a mutable reference to `self`.
+    ///
+    /// # Parameters
+    /// - `tile_extension`: The new `TileExtension` value to set.
+    ///
+    /// # Returns
+    /// A mutable reference to the current instance of the caller (`Self`), enabling
+    /// method chaining.
+    ///
+    /// # Example
+    /// ```rust
+    /// use model::tile::{TileBuilder, TileExtension};
+    /// let tile = TileBuilder::default()
+    ///     .tile_extension(TileExtension::None)
+    ///     .other_method();
+    /// ```
     pub fn tile_extension(&mut self, tile_extension: TileExtension) -> &mut Self {
         self.tile_extension = tile_extension;
         self
     }
 
-    pub fn build(self, tile: &mut Tile) {
-        tile.north = self.north;
-        tile.south = self.south;
-        tile.east = self.east;
-        tile.west = self.west;
-        tile.tile_extension = self.tile_extension;
+    /// Constructs and returns a `Tile` instance using the current state of the builder.
+    ///
+    /// This method takes the fields from the builder instance (`self`) and uses them to create
+    /// and return a new `Tile` object. The values for the `Tile` fields (`east`, `north`, `south`,
+    /// `west`, and `tile_extension`) are directly copied from the corresponding fields of the builder.
+    ///
+    /// # Returns
+    ///
+    /// A `Tile` instance is initialized with the builder's current field values.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use model::side::SideKind;
+    /// use model::tile::{TileBuilder, TileExtension};
+    ///
+    /// let builder = TileBuilder::default()
+    ///     .east(|b| b.kind(SideKind::Meadow).section(1))
+    ///     .north(|b| b.kind(SideKind::Road).section(1))
+    ///     .west(|b| b.kind(SideKind::Town).section(1))
+    ///     .south(|b| b.kind(SideKind::Road).section(2))
+    ///     .tile_extension(TileExtension::None);
+    ///
+    /// let tile = builder.build();
+    /// ```
+    pub fn build(&self) -> Tile {
+        Tile {
+            east: self.east,
+            north: self.north,
+            south: self.south,
+            west: self.west,
+            tile_extension: self.tile_extension,
+        }
     }
 }

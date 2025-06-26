@@ -1,15 +1,9 @@
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
+mod controller;
+mod routes;
 
-use rocket::Route;
-
-#[get("/hello")]
-fn hello() -> String {
-    "Hello !".into()
-}
-
-pub fn routes() -> Vec<Route> {
-    routes![hello]
-}
+use crate::routes::routes;
 
 #[launch]
 fn rocket() -> _ {
