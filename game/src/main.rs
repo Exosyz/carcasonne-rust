@@ -14,5 +14,11 @@ fn main() {
 
     game.shuffle_available_tiles();
 
+    // TODO Ajouter la rotation des joueurs pour qu'il pioche une carte
+
+    // TODO Afficher le board
+    // TODO     - aVec des lettres dans un premier temps
+    // TODO     - aVec des multichars dans un second temps
+
     println!("{:?}", game.get_next_tile());
 }

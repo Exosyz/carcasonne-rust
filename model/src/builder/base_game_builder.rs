@@ -2,7 +2,9 @@
 //! the base tiles for a game. It provides a method that must be implemented
 //! by any struct that wants to support adding the base tileset of the game.
 
-use crate::builder::tiles_builders::{AbbeyTileBuilder, RoadTileBuilder, TownTileBuilder};
+use crate::builder::tiles_builders::abbey_tiles_builder::AbbeyTileBuilder;
+use crate::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
+use crate::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
 use crate::game::GameBuilder;
 
 /// A trait that provides functionality to add a base game configuration or setup.
@@ -19,7 +21,7 @@ use crate::game::GameBuilder;
 pub trait BaseGameBuilder {
     /// Adds the base game systems, components, and functionality to the application.
     ///
-    /// This function is typically used to initialize all necessary components
+    /// This function is typically used to initialize all necessary parts
     /// and systems required for the base game logic. It ensures the application
     /// contains the foundational setup to run the game properly.
     ///
