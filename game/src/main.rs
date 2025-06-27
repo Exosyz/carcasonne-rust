@@ -1,5 +1,5 @@
 use model::builder::base_game_builder::BaseGameBuilder;
-use model::game::GameBuilder;
+use model::builder::game_builder::GameBuilder;
 
 fn main() {
     let mut game_builder = GameBuilder::default();

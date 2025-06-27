@@ -1,6 +1,8 @@
 //! This module defines a trait `TownTileBuilder` and its implementation for `TileBuilder`.
+
+use crate::builder::tile_builder::TileBuilder;
 use crate::side::SideKind;
-use crate::tile::{TileBuilder, TileExtension};
+use crate::tile::TileExtension;
 
 /// A trait that defines a builder for creating various types of town tiles.
 ///
@@ -20,7 +22,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_c_town()
@@ -39,7 +42,8 @@ pub trait TownTileBuilder {
     ///
     /// ### Example
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_d_town()
@@ -66,7 +70,8 @@ pub trait TownTileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_e_town()
@@ -87,7 +92,8 @@ pub trait TownTileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_f_town()
@@ -109,7 +115,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_g_town()
@@ -129,7 +136,8 @@ pub trait TownTileBuilder {
     /// # Example
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_h_town()
@@ -163,7 +171,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_i_town()
@@ -179,7 +188,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_j_town();
@@ -208,7 +218,8 @@ pub trait TownTileBuilder {
     ///
     /// # Examples
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_k_town()
@@ -227,7 +238,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_l_town()
@@ -248,7 +260,8 @@ pub trait TownTileBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_m_town()
@@ -264,7 +277,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_n_town()
@@ -284,7 +298,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_o_town()
@@ -313,7 +328,8 @@ pub trait TownTileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_p_town()
@@ -340,7 +356,8 @@ pub trait TownTileBuilder {
     /// # Example
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_q_town()
@@ -361,7 +378,8 @@ pub trait TownTileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_r_town()
@@ -380,7 +398,8 @@ pub trait TownTileBuilder {
     ///
     /// # Example
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_s_town()
@@ -406,7 +425,8 @@ pub trait TownTileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_t_town()

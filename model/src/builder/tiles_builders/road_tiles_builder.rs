@@ -18,7 +18,8 @@
 //! # Examples
 //!
 //! ```rust
-//! use model::tile::TileBuilder;
+//! use model::builder::tile_builder::TileBuilder;
+//! use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
 //!
 //! let mut tile_builder = TileBuilder::default();
 //!
@@ -34,8 +35,9 @@
 //! // Build an X-shaped road tile configuration
 //! tile_builder.build_x_road();
 //! ```
+
+use crate::builder::tile_builder::TileBuilder;
 use crate::side::SideKind;
-use crate::tile::TileBuilder;
 
 /// A trait that defines a builder pattern for constructing different types of road tiles.
 ///
@@ -54,7 +56,8 @@ pub trait RoadTileBuilder {
     /// # Examples
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_u_road()
@@ -87,7 +90,8 @@ pub trait RoadTileBuilder {
     /// # Example
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_v_road()
@@ -106,7 +110,8 @@ pub trait RoadTileBuilder {
     /// # Example
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_w_road()
@@ -124,7 +129,8 @@ pub trait RoadTileBuilder {
     /// # Examples
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_x_road()
@@ -152,7 +158,8 @@ impl RoadTileBuilder for TileBuilder {
     ///
     /// # Example
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_u_road(); // Configures the sides in a "U"-shape as described.
@@ -181,7 +188,8 @@ impl RoadTileBuilder for TileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_v_road();
@@ -212,7 +220,8 @@ impl RoadTileBuilder for TileBuilder {
     /// # Examples
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_w_road();
@@ -240,7 +249,8 @@ impl RoadTileBuilder for TileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_x_road();

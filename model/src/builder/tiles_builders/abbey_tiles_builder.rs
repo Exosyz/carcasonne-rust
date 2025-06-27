@@ -1,6 +1,7 @@
+use crate::builder::tile_builder::TileBuilder;
 use crate::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
 use crate::side::SideKind;
-use crate::tile::{TileBuilder, TileExtension};
+use crate::tile::TileExtension;
 
 /// A trait defining the builder pattern for creating Abbey tiles.
 ///
@@ -25,7 +26,8 @@ pub trait AbbeyTileBuilder {
     /// # Example
     ///
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::abbey_tiles_builder::AbbeyTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_a_abbey().finalize();
@@ -54,7 +56,8 @@ pub trait AbbeyTileBuilder {
     /// # Example
     ///
     /// ```
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::abbey_tiles_builder::AbbeyTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_b_abbey()
@@ -82,7 +85,8 @@ impl AbbeyTileBuilder for TileBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::abbey_tiles_builder::AbbeyTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_a_abbey();
@@ -112,7 +116,8 @@ impl AbbeyTileBuilder for TileBuilder {
     ///
     /// # Examples
     /// ```rust
-    /// use model::tile::TileBuilder;
+    /// use model::builder::tile_builder::TileBuilder;
+    /// use model::builder::tiles_builders::abbey_tiles_builder::AbbeyTileBuilder;
     ///
     /// let mut builder = TileBuilder::default();
     /// builder.build_b_abbey();

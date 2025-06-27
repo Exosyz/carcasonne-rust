@@ -2,10 +2,10 @@
 //! the base tiles for a game. It provides a method that must be implemented
 //! by any struct that wants to support adding the base tileset of the game.
 
+use crate::builder::game_builder::GameBuilder;
 use crate::builder::tiles_builders::abbey_tiles_builder::AbbeyTileBuilder;
 use crate::builder::tiles_builders::road_tiles_builder::RoadTileBuilder;
 use crate::builder::tiles_builders::town_tiles_builder::TownTileBuilder;
-use crate::game::GameBuilder;
 
 /// A trait that provides functionality to add a base game configuration or setup.
 ///
@@ -33,7 +33,7 @@ pub trait BaseGameBuilder {
     ///
     /// ```rust
     /// use model::builder::base_game_builder::BaseGameBuilder;
-    /// use model::game::GameBuilder;
+    /// use model::builder::game_builder::GameBuilder;
     /// let mut app = GameBuilder::default();
     /// app.add_base_game()
     ///    .run();
