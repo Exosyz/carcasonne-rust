@@ -1,8 +1,6 @@
 [workspace]
 
 members = [
-    "model",
-    "game",
-    "misc",
-    "api"
+    "carcasonne_core",
+    "carcasonne_app"
 ]
