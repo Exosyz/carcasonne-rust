@@ -6,7 +6,8 @@ use carcasonne_console_input::input_handler::menu_input_handler::MenuConsoleInpu
 use carcasonne_console_input::input_handler::{read_input_event, InputHandler};
 use carcasonne_core::action::Action;
 use carcasonne_core::game_state::GameState;
-use carcasonne_core::renderer::Renderer;
+use carcasonne_core::renderer::{Renderer, UIComponent};
+use carcasonne_game_ui::ui_component::GameStateRenderer;
 
 pub struct Game<T: Renderer> {
     game_state: GameState,
@@ -24,7 +25,7 @@ impl<T: Renderer> Game<T> {
     }
 
     pub fn run(&mut self) {
-        self.renderer.render(&self.game_state);
+        GameStateRenderer(&self.game_state).render(&self.renderer);
         'main_loop: loop {
             let new_state = match self.game_state {
                 Menu => self.handle_menu(),
@@ -34,7 +35,6 @@ impl<T: Renderer> Game<T> {
 
             if let Some(new_state) = new_state {
                 self.change_state(new_state);
-                self.renderer.render(&self.game_state);
             }
         }
     }
@@ -45,7 +45,8 @@ impl<T: Renderer> Game<T> {
             Menu => Box::new(MenuConsoleInputHandler {}),
             Playing => Box::new(GameConsoleInputHandler {}),
             Stop => Box::new(DefaultConsoleInputHandler {}),
-        }
+        };
+        GameStateRenderer(&self.game_state).render(&self.renderer);
     }
 
     fn handle_menu(&mut self) -> Option<GameState> {

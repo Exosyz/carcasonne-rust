@@ -1,4 +1,3 @@
-use carcasonne_core::game_state::GameState;
 use carcasonne_core::renderer::Renderer;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 
@@ -19,11 +18,7 @@ impl Drop for TextRenderer {
 }
 
 impl Renderer for TextRenderer {
-    fn render(&self, state: &GameState) {
-        match state {
-            GameState::Menu => println!("Menu"),
-            GameState::Playing => println!("Playing"),
-            GameState::Stop => println!("Stop"),
-        }
+    fn render(&self, text: &str) {
+        println!("{}", text);
     }
 }

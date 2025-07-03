@@ -4,7 +4,7 @@ use carcasonne_core::action::Action;
 pub struct DefaultConsoleInputHandler;
 
 impl InputHandler for DefaultConsoleInputHandler {
-    fn handle_input(&mut self, event: InputEvent) -> Action {
+    fn handle_input(&mut self, _: InputEvent) -> Action {
         Action::None
     }
 }

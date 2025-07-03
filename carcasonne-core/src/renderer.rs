@@ -1,5 +1,7 @@
-use crate::game_state::GameState;
-
 pub trait Renderer {
-    fn render(&self, state: &GameState);
+    fn render(&self, text: &str);
+}
+
+pub trait UIComponent {
+    fn render(&self, renderer: &dyn Renderer);
 }
