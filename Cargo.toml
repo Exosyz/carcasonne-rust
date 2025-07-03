@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
-    "carcasonne_core",
-    "carcasonne_app"
-]
+    "carcasonne-core",
+    "carcasonne-app",
+    "carcasonne-ui/carcasonne-text-ui"
+, "carcasonne-input/carcasonne-console-input"]

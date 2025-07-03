@@ -1,0 +1,9 @@
+[package]
+name = "carcasonne-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+carcasonne-core = { path = "../carcasonne-core" }
+carcasonne-text-ui = { path = "../carcasonne-ui/carcasonne-text-ui" }
+carcasonne-console-input = { path = "../carcasonne-input/carcasonne-console-input" }

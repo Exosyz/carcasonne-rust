@@ -1,0 +1,8 @@
+[package]
+name = "carcasonne-text-ui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+carcasonne-core = { path = "../../carcasonne-core" }
+crossterm = "0.29.0"
