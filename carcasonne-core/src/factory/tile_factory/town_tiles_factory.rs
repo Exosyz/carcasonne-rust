@@ -3,24 +3,47 @@ use crate::factory::tile_factory::TileFactory;
 use crate::model::tile::Tile;
 use crate::model::tile_feature::Edge::{East, North, South, West};
 
+/// A trait for constructing predefined town tile variants.
+///
+/// Each method returns a `Tile` representing a unique configuration of town features,
+/// based on the base game's tile definitions. These can include shielded towns,
+/// connected roads, and various edge combinations.
 pub trait TownTileBuilder {
+    /// Builds town tile variant C.
     fn build_c_town() -> Tile;
+    /// Builds town tile variant D.
     fn build_d_town() -> Tile;
+    /// Builds town tile variant E.
     fn build_e_town() -> Tile;
+    /// Builds town tile variant F.
     fn build_f_town() -> Tile;
+    /// Builds town tile variant G.
     fn build_g_town() -> Tile;
+    /// Builds town tile variant H.
     fn build_h_town() -> Tile;
+    /// Builds town tile variant I.
     fn build_i_town() -> Tile;
+    /// Builds town tile variant J.
     fn build_j_town() -> Tile;
+    /// Builds town tile variant K.
     fn build_k_town() -> Tile;
+    /// Builds town tile variant L.
     fn build_l_town() -> Tile;
+    /// Builds town tile variant M.
     fn build_m_town() -> Tile;
+    /// Builds town tile variant N.
     fn build_n_town() -> Tile;
+    /// Builds town tile variant O.
     fn build_o_town() -> Tile;
+    /// Builds town tile variant P.
     fn build_p_town() -> Tile;
+    /// Builds town tile variant Q.
     fn build_q_town() -> Tile;
+    /// Builds town tile variant R.
     fn build_r_town() -> Tile;
+    /// Builds town tile variant S.
     fn build_s_town() -> Tile;
+    /// Builds town tile variant T.
     fn build_t_town() -> Tile;
 }
 

@@ -2,17 +2,12 @@ use crate::model::tile::Tile;
 use rand::rng;
 use rand::seq::SliceRandom;
 
-/// A collection of tiles available in the game.
-///
-/// This structure represents the "tile bag" from which tiles can be drawn.
-/// Tiles can be shuffled and drawn randomly one at a time.
-#[derive(Debug)]
-pub struct GameTiles {
+pub struct GameContext {
     /// The list of remaining tiles in the game.
     pub available_tiles: Vec<Tile>,
 }
 
-impl GameTiles {
+impl GameContext {
     /// Randomly selects and removes a tile from the remaining pool.
     ///
     /// Internally, this method shuffles the remaining tiles and pops one
@@ -21,9 +16,9 @@ impl GameTiles {
     /// # Examples
     ///
     /// ```
-    /// use carcasonne_core::model::game::GameTiles;
+    /// use carcasonne_core::context::GameContext;
     ///
-    /// let mut game_tiles = GameTiles { available_tiles: vec![] };
+    /// let mut game_tiles = GameContext { available_tiles: vec![] };
     /// let tile = game_tiles.select_random_tile();
     /// ```
     pub fn select_random_tile(&mut self) -> Option<Tile> {
@@ -46,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_select_random_tile_returns_tile() {
-        let mut game_tiles = GameTiles {
+        let mut game_tiles = GameContext {
             available_tiles: vec![dummy_tile()],
         };
 
@@ -61,7 +56,7 @@ mod tests {
 
     #[test]
     fn test_select_random_tile_from_empty_deck_returns_none() {
-        let mut game_tiles = GameTiles {
+        let mut game_tiles = GameContext {
             available_tiles: vec![],
         };
         let tile = game_tiles.select_random_tile();
@@ -73,7 +68,7 @@ mod tests {
 
     #[test]
     fn test_random_selection_exhausts_all_tiles() {
-        let mut game_tiles = GameTiles {
+        let mut game_tiles = GameContext {
             available_tiles: vec![
                 dummy_tile(),
                 dummy_tile(),
@@ -98,10 +93,10 @@ mod tests {
     #[test]
     fn test_shuffling_changes_order() {
         let tiles: Vec<Tile> = vec![dummy_tile(), dummy_tile(), dummy_tile()];
-        let mut game_tiles_1 = GameTiles {
+        let mut game_tiles_1 = GameContext {
             available_tiles: tiles.clone(),
         };
-        let mut game_tiles_2 = GameTiles {
+        let mut game_tiles_2 = GameContext {
             available_tiles: tiles.clone(),
         };
 

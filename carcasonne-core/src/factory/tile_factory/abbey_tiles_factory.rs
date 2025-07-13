@@ -3,8 +3,16 @@ use crate::factory::tile_factory::TileFactory;
 use crate::model::tile::Tile;
 use crate::model::tile_feature::Edge::South;
 
+/// Defines a builder interface for generating Abbey-style tiles.
+///
+/// This trait provides methods to create predefined Abbey tile variations
+/// used in the game, each with different feature configurations.
 pub trait AbbeyTileBuilder {
+    /// Builds an Abbey tile with a road on the south edge.
+    ///
+    /// Typically used to provide variation in tile connectivity.
     fn build_a_abbey() -> Tile;
+    /// Builds a plain Abbey tile with no features except the abbey extension.
     fn build_b_abbey() -> Tile;
 }
 
@@ -29,7 +37,6 @@ mod tests {
     fn test_build_a_abbey() {
         let tile = TileFactory::build_a_abbey();
 
-        // Vérifie qu'il y a bien une route sur le bord Sud
         assert_eq!(tile.tile_features.len(), 1);
         let feature = &tile.tile_features[0];
         assert_eq!(feature.edges, vec![South]);
@@ -38,7 +45,6 @@ mod tests {
             TypeId::of::<Road>()
         );
 
-        // Vérifie qu'il y a bien une abbaye
         assert!(tile.tile_extension.is_some());
         assert_eq!(
             tile.tile_extension.unwrap().as_ref().type_id(),
@@ -50,10 +56,8 @@ mod tests {
     fn test_build_b_abbey() {
         let tile = TileFactory::build_b_abbey();
 
-        // Pas de routes
         assert!(tile.tile_features.is_empty());
 
-        // Présence de l'abbaye
         assert!(tile.tile_extension.is_some());
         assert_eq!(
             tile.tile_extension.unwrap().as_ref().type_id(),

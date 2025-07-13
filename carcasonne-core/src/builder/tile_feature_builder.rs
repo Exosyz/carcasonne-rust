@@ -1,13 +1,22 @@
 use crate::model::tile_feature::{Edge, TileFeature, TileFeatureEnhancement, TileFeatureType};
 
-pub(super) struct TileFeatureBuilder {
+/// Builder pattern for constructing `TileFeature` instances.
+///
+/// Supports setting the feature type, the edges it spans, and an optional enhancement.
+/// Methods consume and return `self` for chaining.
+pub struct TileFeatureBuilder {
     feature_type: Box<dyn TileFeatureType>,
     edges: Vec<Edge>,
     enhancement: Option<Box<dyn TileFeatureEnhancement>>,
 }
 
 impl TileFeatureBuilder {
-    pub(super) fn new(feature: Box<dyn TileFeatureType>) -> Self {
+    /// Creates a new `TileFeatureBuilder` with the given feature type.
+    ///
+    /// # Arguments
+    ///
+    /// * `feature` - The core feature type (e.g., Town, Road).
+    pub fn new(feature: Box<dyn TileFeatureType>) -> Self {
         Self {
             feature_type: feature,
             edges: vec![],
@@ -15,17 +24,28 @@ impl TileFeatureBuilder {
         }
     }
 
-    pub(super) fn edges(mut self, edge: Vec<Edge>) -> Self {
+    /// Sets the edges that this feature occupies on the tile.
+    ///
+    /// # Arguments
+    ///
+    /// * `edge` - A vector of `Edge` values representing tile edges.
+    pub fn edges(mut self, edge: Vec<Edge>) -> Self {
         self.edges = edge;
         self
     }
 
-    pub(super) fn enhancement(mut self, enhancement: Box<dyn TileFeatureEnhancement>) -> Self {
+    /// Sets an optional enhancement for this tile feature.
+    ///
+    /// # Arguments
+    ///
+    /// * `enhancement` - A boxed trait object implementing `TileFeatureEnhancement`.
+    pub fn enhancement(mut self, enhancement: Box<dyn TileFeatureEnhancement>) -> Self {
         self.enhancement = Some(enhancement);
         self
     }
 
-    pub(super) fn build(self) -> TileFeature {
+    /// Builds the final `TileFeature` instance.
+    pub fn build(self) -> TileFeature {
         TileFeature {
             edges: self.edges,
             feature_type: self.feature_type,

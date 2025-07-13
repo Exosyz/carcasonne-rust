@@ -5,6 +5,5 @@ edition = "2024"
 
 [dependencies]
 carcasonne-core = { path = "../carcasonne-core" }
-carcasonne-game-ui = { path = "../carcasonne-ui/carcasonne-game-ui" }
 carcasonne-text-ui = { path = "../carcasonne-ui/carcasonne-text-ui" }
 carcasonne-console-input = { path = "../carcasonne-input/carcasonne-console-input" }

@@ -3,20 +3,32 @@ use crate::model::tile::Tile;
 use crate::model::tile_extension::{Abbey, TileExtension};
 use crate::model::tile_feature::{Edge, Road, Shield, TileFeature, Town};
 
-pub(crate) struct TileBuilder {
+/// A builder for constructing complex `Tile` instances.
+///
+/// This builder supports adding multiple features such as towns and roads,
+/// optionally enhanced (e.g., shielded towns), and setting tile extensions like Abbeys.
+///
+/// The builder methods consume and return `self` for ergonomic chaining.
+pub struct TileBuilder {
     tile_features: Vec<TileFeature>,
     tile_extension: Option<Box<dyn TileExtension>>,
 }
 
 impl TileBuilder {
-    pub(crate) fn new() -> Self {
+    /// Creates a new empty `TileBuilder`.
+    pub fn new() -> Self {
         Self {
             tile_features: Vec::new(),
             tile_extension: None,
         }
     }
 
-    pub(crate) fn add_town(mut self, edges: Vec<Edge>) -> Self {
+    /// Adds a town feature covering the specified edges.
+    ///
+    /// # Arguments
+    ///
+    /// * `edges` - The edges of the tile that the town feature occupies.
+    pub fn add_town(mut self, edges: Vec<Edge>) -> Self {
         self.tile_features.push(
             TileFeatureBuilder::new(Box::new(Town {}))
                 .edges(edges)
@@ -25,7 +37,14 @@ impl TileBuilder {
         self
     }
 
-    pub(crate) fn add_shielded_town(mut self, edges: Vec<Edge>) -> Self {
+    /// Adds a town feature with a shield enhancement on the specified edges.
+    ///
+    /// Shields typically grant bonus points when scoring the town.
+    ///
+    /// # Arguments
+    ///
+    /// * `edges` - The edges of the tile that the shielded town occupies.
+    pub fn add_shielded_town(mut self, edges: Vec<Edge>) -> Self {
         self.tile_features.push(
             TileFeatureBuilder::new(Box::new(Town {}))
                 .edges(edges)
@@ -35,7 +54,12 @@ impl TileBuilder {
         self
     }
 
-    pub(crate) fn add_road(mut self, edges: Vec<Edge>) -> Self {
+    /// Adds a road feature covering the specified edges.
+    ///
+    /// # Arguments
+    ///
+    /// * `edges` - The edges of the tile that the road feature occupies.
+    pub fn add_road(mut self, edges: Vec<Edge>) -> Self {
         self.tile_features.push(
             TileFeatureBuilder::new(Box::new(Road {}))
                 .edges(edges)
@@ -44,12 +68,16 @@ impl TileBuilder {
         self
     }
 
-    pub(crate) fn add_abbey(mut self) -> Self {
+    /// Adds an Abbey tile extension.
+    ///
+    /// Abbeys are special tile extensions that typically affect scoring or placement.
+    pub fn add_abbey(mut self) -> Self {
         self.tile_extension = Some(Box::new(Abbey {}));
         self
     }
 
-    pub(crate) fn build(self) -> Tile {
+    /// Finalizes the builder and returns the constructed `Tile`.
+    pub fn build(self) -> Tile {
         Tile {
             tile_features: self.tile_features,
             tile_extension: self.tile_extension,

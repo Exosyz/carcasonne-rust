@@ -4,5 +4,4 @@ members = [
     "carcasonne-core",
     "carcasonne-app",
     "carcasonne-ui/carcasonne-text-ui",
-    "carcasonne-input/carcasonne-console-input",
-    "carcasonne-ui/carcasonne-game-ui"]
+    "carcasonne-input/carcasonne-console-input"]

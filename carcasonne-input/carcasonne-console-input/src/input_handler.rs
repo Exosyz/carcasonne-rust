@@ -1,22 +1,30 @@
-pub mod default_input_handler;
-pub mod game_input_handler;
-pub mod menu_input_handler;
-
-use carcasonne_core::action::Action;
+use carcasonne_core::input_handler::InputEvent;
 use crossterm::event::{read, Event, KeyCode};
 
-pub enum InputEvent {
-    Up,
-    Down,
-    Left,
-    Right,
-    Quit,
-}
-
-pub trait InputHandler {
-    fn handle_input(&mut self, event: InputEvent) -> Action;
-}
-
+/// Blocks until a valid keyboard input is received and returns a corresponding `InputEvent`.
+///
+/// This function loops indefinitely until a mapped key is pressed (arrow keys, Enter, or 'q').
+/// Other key presses are ignored.
+///
+/// # Behavior
+/// - Arrow keys map to directional input events.
+/// - Enter maps to `InputEvent::Enter`.
+/// - 'q' maps to `InputEvent::Quit`.
+/// - All other inputs are ignored.
+///
+/// # Examples
+///
+/// ```
+/// use carcasonne_console_input::input_handler::read_input_event;
+/// use carcasonne_core::input_handler::InputEvent;
+///
+/// let input = read_input_event();
+/// match input {
+///     InputEvent::Quit => println!("Quitting..."),
+///     InputEvent::Up => println!("Moving up"),
+///     _ => {}
+/// }
+/// ```
 pub fn read_input_event() -> InputEvent {
     loop {
         if let Event::Key(key_event) = read().unwrap() {
@@ -25,6 +33,7 @@ pub fn read_input_event() -> InputEvent {
                 KeyCode::Down => InputEvent::Down,
                 KeyCode::Left => InputEvent::Left,
                 KeyCode::Right => InputEvent::Right,
+                KeyCode::Enter => InputEvent::Enter,
                 KeyCode::Char('q') => InputEvent::Quit,
                 _ => continue,
             };

@@ -3,10 +3,18 @@ use crate::factory::tile_factory::TileFactory;
 use crate::model::tile::Tile;
 use crate::model::tile_feature::Edge::{East, North, South, West};
 
+/// A trait for constructing predefined road tile variants.
+///
+/// Each method corresponds to a specific tile layout involving road features
+/// on particular edges. These tiles are used to form the roads in the game.
 pub trait RoadTileBuilder {
+    /// Builds a road tile with roads on the North and South edges (straight road).
     fn build_u_road() -> Tile;
+    /// Builds a road tile with roads on the North and West edges (corner).
     fn build_v_road() -> Tile;
+    /// Builds a T-junction road tile (North, West, and South).
     fn build_w_road() -> Tile;
+    /// Builds a crossroads road tile (roads on all four edges).
     fn build_x_road() -> Tile;
 }
 

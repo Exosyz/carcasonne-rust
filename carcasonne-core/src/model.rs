@@ -1,4 +1,4 @@
 pub mod game;
-pub(crate) mod tile;
-pub(crate) mod tile_extension;
-pub(crate) mod tile_feature;
+pub mod tile;
+pub mod tile_extension;
+pub mod tile_feature;

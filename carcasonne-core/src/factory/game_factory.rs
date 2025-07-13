@@ -5,9 +5,26 @@ use crate::factory::tile_factory::town_tiles_factory::TownTileBuilder;
 use crate::factory::tile_factory::TileFactory;
 use crate::model::game::GameTiles;
 
+/// A factory responsible for creating predefined sets of game tiles.
+///
+/// `GameTilesFactory` provides convenience methods to build common tile
+/// configurations used in the game, such as the base game tile set.
 pub struct GameTilesFactory;
 
 impl GameTilesFactory {
+    /// Builds the base game tile set.
+    ///
+    /// This method constructs the standard collection of tiles required for a
+    /// typical game session, including abbey, road, and town tiles with
+    /// predefined quantities.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use carcasonne_core::factory::game_factory::GameTilesFactory;
+    ///
+    /// let base_game_tiles = GameTilesFactory::build_base_game();
+    /// ```
     pub fn build_base_game() -> GameTiles {
         GameBuilder::new()
             // Add Abbey
