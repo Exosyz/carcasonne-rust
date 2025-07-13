@@ -11,19 +11,6 @@ use crossterm::event::{read, Event, KeyCode};
 /// - Enter maps to `InputEvent::Enter`.
 /// - 'q' maps to `InputEvent::Quit`.
 /// - All other inputs are ignored.
-///
-/// # Examples
-///
-/// ```
-/// use carcasonne_console_input::input_handler::read_input_event;
-/// use carcasonne_core::input_handler::InputEvent;
-///
-/// let input = read_input_event();
-/// match input {
-///     InputEvent::Quit => println!("Quitting..."),
-///     InputEvent::Up => println!("Moving up"),
-///     _ => {}
-/// }
 /// ```
 pub fn read_input_event() -> InputEvent {
     loop {
