@@ -27,16 +27,21 @@ use crossterm::event::{read, Event, KeyCode};
 /// ```
 pub fn read_input_event() -> InputEvent {
     loop {
-        if let Event::Key(key_event) = read().unwrap() {
-            return match key_event.code {
-                KeyCode::Up => InputEvent::Up,
-                KeyCode::Down => InputEvent::Down,
-                KeyCode::Left => InputEvent::Left,
-                KeyCode::Right => InputEvent::Right,
-                KeyCode::Enter => InputEvent::Enter,
-                KeyCode::Char('q') => InputEvent::Quit,
+        match read() {
+            Ok(Event::Key(key_event)) => match key_event.code {
+                KeyCode::Up => return InputEvent::Up,
+                KeyCode::Down => return InputEvent::Down,
+                KeyCode::Left => return InputEvent::Left,
+                KeyCode::Right => return InputEvent::Right,
+                KeyCode::Enter => return InputEvent::Enter,
+                KeyCode::Char('q') => return InputEvent::Quit,
                 _ => continue,
-            };
+            },
+            Ok(_) => continue,
+            Err(e) => {
+                eprintln!("Fail to read input: {e}");
+                panic!("Fail to read key event");
+            }
         }
     }
 }
