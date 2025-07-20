@@ -12,7 +12,7 @@ pub trait Renderable {
     ///
     /// * `frame` - The mutable frame where the object will be rendered.
     /// * `point` - The top-left position on the frame to start rendering.
-    fn render(&self, frame: &mut Frame, point: Point);
+    fn render(self, frame: &mut Frame, point: Point);
     /// Returns the size that the rendered object will occupy.
     ///
     /// # Returns

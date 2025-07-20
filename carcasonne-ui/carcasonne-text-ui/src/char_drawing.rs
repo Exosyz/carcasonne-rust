@@ -1,6 +1,7 @@
-/// Represents the different characters used to draw box borders.
+/// Represents the different characters used to draw box borders and UI elements.
 ///
-/// These include corners and line segments for horizontal and vertical edges.
+/// These include corners, line segments for horizontal and vertical edges,
+/// as well as symbols used for menu selection indicators.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CharDrawing {
     /// Represents no character (empty space).
@@ -17,6 +18,10 @@ pub enum CharDrawing {
     Horizontal,
     /// Vertical line segment.
     Vertical,
+    /// Represents an unselected radio button (empty space).
+    Radio,
+    /// Represents a selected radio button (arrow symbol).
+    SelectedRadio,
 }
 
 impl From<CharDrawing> for char {
@@ -24,7 +29,7 @@ impl From<CharDrawing> for char {
     ///
     /// # Returns
     ///
-    /// * A `char` representing the box drawing element.
+    /// * A `char` representing the box drawing or UI element.
     fn from(value: CharDrawing) -> Self {
         match value {
             CharDrawing::None => ' ',
@@ -34,6 +39,8 @@ impl From<CharDrawing> for char {
             CharDrawing::CornerBottomRight => '┘',
             CharDrawing::Horizontal => '─',
             CharDrawing::Vertical => '│',
+            CharDrawing::Radio => ' ',
+            CharDrawing::SelectedRadio => '▶',
         }
     }
 }
@@ -52,15 +59,13 @@ mod tests {
             (CharDrawing::CornerBottomRight, '┘'),
             (CharDrawing::Horizontal, '─'),
             (CharDrawing::Vertical, '│'),
+            (CharDrawing::Radio, ' '),
+            (CharDrawing::SelectedRadio, '▶'),
         ];
 
         for (input, expected) in cases {
             let c: char = input.into();
-            assert_eq!(
-                c, expected,
-                "CharDrawing::{:?} should convert to '{}'",
-                input, expected
-            );
+            assert_eq!(c, expected, "{input:?} should convert to '{expected}'",);
         }
     }
 }

@@ -1,20 +1,11 @@
+pub mod cell;
+
 use crate::char_drawing::CharDrawing;
-use crate::color::Color;
+use crate::frame::cell::{Cell, CellTag};
 use crate::renderable::Renderable;
-use carcasonne_core::layout::node::Node;
+use carcasonne_core::layout::node::{Node, NodeTag};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
-
-/// A single text-based cell in the frame, containing a character and its associated colors.
-#[derive(Clone)]
-pub struct Cell {
-    /// The character displayed in the cell.
-    pub symbol: char,
-    /// The background color of the cell.
-    pub background_color: Color,
-    /// The foreground (text) color of the cell.
-    pub foreground_color: Color,
-}
 
 /// A 2D buffer of `Cell`, used for rendering a text-based user interface.
 ///
@@ -29,6 +20,7 @@ pub struct Frame {
     pub size: Size,
     /// A 2D vector of cells, indexed as `cells[y][x]`.
     pub cells: Vec<Vec<Cell>>,
+    pub cursor: Option<Point>,
 }
 
 impl Frame {
@@ -46,17 +38,8 @@ impl Frame {
     pub fn new(size: Size) -> Self {
         Self {
             size,
-            cells: vec![
-                vec![
-                    Cell {
-                        symbol: CharDrawing::None.into(),
-                        background_color: Color::Black,
-                        foreground_color: Color::White,
-                    };
-                    size.width
-                ];
-                size.height
-            ],
+            cells: vec![vec![Cell::new(CharDrawing::None.into()); size.width]; size.height],
+            cursor: None,
         }
     }
 
@@ -87,19 +70,12 @@ impl Frame {
     /// * `c` - The character to draw.
     /// * `foreground_color` - The color of the character.
     /// * `background_color` - The background color behind the character.
-    pub fn char(
-        &mut self,
-        point: Point,
-        c: char,
-        foreground_color: Color,
-        background_color: Color,
-    ) {
+    pub fn char(&mut self, point: Point, c: char, tags: &[NodeTag]) {
         self.set_cell(
             point,
             Cell {
                 symbol: c,
-                background_color: background_color.clone(),
-                foreground_color: foreground_color.clone(),
+                tags: tags.iter().map(CellTag::from).collect(),
             },
         );
     }
@@ -111,7 +87,11 @@ impl Frame {
     /// * `point` - The position where the character will be drawn.
     /// * `c` - The character to draw.
     pub fn char_simple(&mut self, point: Point, c: char) {
-        self.char(point, c, Color::White, Color::Black);
+        self.char(point, c, &[]);
+    }
+
+    pub fn set_cursor(&mut self, point: Option<Point>) {
+        self.cursor = point;
     }
 }
 
@@ -151,8 +131,6 @@ mod tests {
         for row in &frame.cells {
             for cell in row {
                 assert_eq!(cell.symbol, CharDrawing::None.into());
-                assert_eq!(cell.background_color, Color::Black);
-                assert_eq!(cell.foreground_color, Color::White);
             }
         }
     }
@@ -164,12 +142,10 @@ mod tests {
         let point = Point::new(1, 1);
         let c = 'X';
 
-        frame.char(point, c, Color::Red, Color::Blue);
+        frame.char(point, c, &[]);
 
         let cell = &frame.cells[1][1];
         assert_eq!(cell.symbol, c);
-        assert_eq!(cell.foreground_color, Color::Red);
-        assert_eq!(cell.background_color, Color::Blue);
     }
 
     #[test]
@@ -183,8 +159,6 @@ mod tests {
 
         let cell = &frame.cells[0][0];
         assert_eq!(cell.symbol, c);
-        assert_eq!(cell.foreground_color, Color::White);
-        assert_eq!(cell.background_color, Color::Black);
     }
 
     #[test]

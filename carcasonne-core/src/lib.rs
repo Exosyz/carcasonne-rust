@@ -1,5 +1,6 @@
 pub mod action;
 mod builder;
+pub mod color;
 pub mod context;
 pub mod factory;
 pub mod input_handler;

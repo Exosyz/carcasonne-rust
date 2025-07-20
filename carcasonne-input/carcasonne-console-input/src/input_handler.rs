@@ -1,34 +1,28 @@
 use carcasonne_core::input_handler::InputEvent;
-use crossterm::event::{read, Event, KeyCode};
+use crossterm::event::{read, Event, KeyCode, KeyEventKind};
 
-/// Blocks until a valid keyboard input is received and returns a corresponding `InputEvent`.
+/// Reads a single input event from the terminal and converts it to an `InputEvent`.
 ///
-/// This function loops indefinitely until a mapped key is pressed (arrow keys, Enter, or 'q').
-/// Other key presses are ignored.
+/// Only key press events are handled. Other types of events or key releases are ignored.
 ///
-/// # Behavior
-/// - Arrow keys map to directional input events.
-/// - Enter maps to `InputEvent::Enter`.
-/// - 'q' maps to `InputEvent::Quit`.
-/// - All other inputs are ignored.
-/// ```
-pub fn read_input_event() -> InputEvent {
-    loop {
-        match read() {
-            Ok(Event::Key(key_event)) => match key_event.code {
-                KeyCode::Up => return InputEvent::Up,
-                KeyCode::Down => return InputEvent::Down,
-                KeyCode::Left => return InputEvent::Left,
-                KeyCode::Right => return InputEvent::Right,
-                KeyCode::Enter => return InputEvent::Enter,
-                KeyCode::Char('q') => return InputEvent::Quit,
-                _ => continue,
-            },
-            Ok(_) => continue,
-            Err(e) => {
-                eprintln!("Fail to read input: {e}");
-                panic!("Fail to read key event");
+/// # Returns
+///
+/// * `Some(InputEvent)` if a relevant key press event was detected.
+/// * `None` if the event is not a key press or not recognized.
+pub fn read_input_event() -> Option<InputEvent> {
+    match read() {
+        Ok(Event::Key(key_event)) if key_event.kind == KeyEventKind::Press => {
+            match key_event.code {
+                KeyCode::Up => Some(InputEvent::Up),
+                KeyCode::Down => Some(InputEvent::Down),
+                KeyCode::Left => Some(InputEvent::Left),
+                KeyCode::Right => Some(InputEvent::Right),
+                KeyCode::Enter => Some(InputEvent::Select),
+                KeyCode::Backspace => Some(InputEvent::Backspace),
+                KeyCode::Char(c) => Some(InputEvent::Char(c)),
+                _ => None,
             }
         }
+        _ => None,
     }
 }

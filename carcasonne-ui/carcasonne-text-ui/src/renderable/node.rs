@@ -15,10 +15,13 @@
 //! - `HorizontalContainer`: inline child nodes
 //!
 //! Borders use `CharDrawing` characters for visual clarity.
+
 use crate::char_drawing::CharDrawing;
 use crate::frame::Frame;
 use crate::renderable::Renderable;
-use carcasonne_core::layout::node::Node;
+use carcasonne_core::color::Color;
+use carcasonne_core::layout::node::NodeTag::{Bold, Foreground, Underline};
+use carcasonne_core::layout::node::{Node, NodeTag};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
 use carcasonne_core::model::tile::Tile;
@@ -43,8 +46,25 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer where the character will be placed.
     /// * `point` - The coordinates where the character will be drawn.
     /// * `char` - The character to render.
-    fn render_char(frame: &mut Frame, point: Point, char: &char) {
-        frame.char_simple(point, *char);
+    fn char(frame: &mut Frame, point: Point, char: char) {
+        frame.char_simple(point, char);
+    }
+
+    /// Renders a character on the given frame at a specific point, applying
+    /// style metadata from the provided tags.
+    ///
+    /// This function extracts visual information (such as foreground and background
+    /// colors) from the given `tags` and applies it when rendering the character
+    /// onto the `frame`.
+    ///
+    /// # Arguments
+    ///
+    /// * `frame` - A mutable reference to the rendering `Frame`.
+    /// * `point` - The position on the frame where the character will be drawn.
+    /// * `char` - The character to render.
+    /// * `tags` - A collection of `NodeTag` metadata used to influence visual style.
+    fn rich_char(frame: &mut Frame, point: Point, char: char, tags: Vec<NodeTag>) {
+        frame.char(point, char, &tags);
     }
 
     /// Renders a string of characters horizontally starting at the given point.
@@ -55,10 +75,35 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The starting position for the first character.
     /// * `str` - The string to render.
-    fn render_text(frame: &mut Frame, point: Point, str: &str) {
+    fn text(frame: &mut Frame, point: Point, str: &str) {
         str.chars()
             .enumerate()
             .for_each(|(i, c)| frame.char_simple(point + Point::new(i, 0), c));
+    }
+
+    /// Renders a string on the given frame starting at a specific point,
+    /// applying style metadata from the provided tags to each character.
+    ///
+    /// This function iterates over each character in the string and renders it
+    /// horizontally on the frame, starting at the given `point`. Style information
+    /// such as color can be derived from the `tags`.
+    ///
+    /// # Arguments
+    ///
+    /// * `frame` - A mutable reference to the rendering [`Frame`] where the text will be drawn.
+    /// * `point` - The top-left starting position for the string.
+    /// * `str` - The string to be rendered.
+    /// * `tags` - A list of [`NodeTag`] used to determine visual properties such as
+    ///   foreground and background color.
+    ///
+    /// # Notes
+    ///
+    /// * Characters are placed horizontally with no line wrapping.
+    /// * You can extend this for rich text layouts by supporting bold, italic.
+    fn rich_text(frame: &mut Frame, point: Point, str: &str, tags: Vec<NodeTag>) {
+        str.chars()
+            .enumerate()
+            .for_each(|(i, c)| frame.char(point + Point::new(i, 0), c, &tags));
     }
 
     /// Renders a tile using a square grid of placeholder characters.
@@ -70,7 +115,7 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left corner where the tile will be drawn.
     /// * `tile` - The tile to render
-    fn render_tile(frame: &mut Frame, point: Point, _: &Tile) {
+    fn tile(frame: &mut Frame, point: Point, _: &Tile) {
         let chars = vec![vec!['.'; TILE_SIZE]; TILE_SIZE];
 
         for (i, row) in chars.iter().enumerate() {
@@ -88,7 +133,7 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left position of the outer frame.
     /// * `elem` - The inner node to render inside the frame.
-    fn render_framed(frame: &mut Frame, point: Point, elem: &Node) {
+    fn framed(frame: &mut Frame, point: Point, elem: Node) {
         let inner_size = elem.size();
         let outer_size = inner_size + Size::new(2, 2);
 
@@ -129,11 +174,12 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left starting point of the container.
     /// * `elems` - A list of nodes to render vertically.
-    fn vertical_container(frame: &mut Frame, point: Point, elems: &Vec<Box<Node>>) {
+    fn vertical_container(frame: &mut Frame, point: Point, elems: Vec<Node>) {
         let mut current_y = point.y;
         for elem in elems {
+            let size = elem.size();
             elem.render(frame, Point::new(point.x, current_y));
-            current_y += elem.size().height;
+            current_y += size.height;
         }
     }
 
@@ -145,12 +191,92 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left starting point of the container.
     /// * `elems` - A list of nodes to render horizontally.
-    fn horizontal_container(frame: &mut Frame, point: Point, elems: &Vec<Box<Node>>) {
+    fn horizontal_container(frame: &mut Frame, point: Point, elems: Vec<Node>) {
         let mut current_x = point.x;
         for elem in elems {
+            let size = elem.size();
             elem.render(frame, Point::new(current_x, point.y));
-            current_x += elem.size().width;
+            current_x += size.width;
         }
+    }
+
+    /// Renders a vertical menu at a specified position on the frame, highlighting the selected item.
+    ///
+    /// Each menu item is displayed with a radio marker indicating whether it is selected or not.
+    /// The selected item is underlined.
+    ///
+    /// # Arguments
+    ///
+    /// * `frame` - A mutable reference to the [`Frame`] on which the menu will be drawn.
+    /// * `point` - The top-left starting position where the menu will be placed.
+    /// * `elems` - A list of strings representing each menu entry.
+    /// * `selected_index` - The index of the currently selected menu item, which will be underlined.
+    ///
+    /// # Notes
+    ///
+    /// - This function uses custom `CharDrawing` symbols to indicate selection.
+    /// - The menu layout is built using a horizontal container for each line,
+    ///   and all lines are stacked vertically.
+    fn menu(frame: &mut Frame, point: Point, elems: Vec<&str>, selected_index: usize) {
+        let built_menu = elems
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                Node::HorizontalContainer(vec![
+                    Node::Char(if i == selected_index {
+                        CharDrawing::SelectedRadio.into()
+                    } else {
+                        CharDrawing::Radio.into()
+                    }),
+                    Node::Char(CharDrawing::None.into()),
+                    if i == selected_index {
+                        Node::RichText(s, vec![Underline])
+                    } else {
+                        Node::Text(s)
+                    },
+                ])
+            })
+            .collect();
+
+        Self::vertical_container(frame, point, built_menu)
+    }
+
+    /// Renders an input field with a visible cursor at the specified position.
+    ///
+    /// This function sets the cursor location on the frame and then displays the provided string
+    /// at the given point.
+    ///
+    /// # Arguments
+    ///
+    /// * `frame` - A mutable reference to the [`Frame`] for rendering.
+    /// * `point` - The top-left origin of the input field.
+    /// * `str` - The current value of the input field to be displayed.
+    /// * `position` - The position of the cursor relative to the `point`.
+    ///
+    /// # Notes
+    ///
+    /// - The cursor position is calculated as `point + position`.
+    /// - This function does not handle editing input, only rendering the current state.
+    fn input(frame: &mut Frame, point: Point, str: &str, position: Point) {
+        frame.set_cursor(Some(point + position));
+        Self::text(frame, point, str);
+    }
+
+    /// Renders an error message with a red foreground and bold style at a given position.
+    ///
+    /// Used to inform the user of validation or system errors in the UI.
+    ///
+    /// # Arguments
+    ///
+    /// * `frame` - A mutable reference to the [`Frame`] for rendering.
+    /// * `point` - The position where the error message should appear.
+    /// * `str` - The error message text to display.
+    ///
+    /// # Styling
+    ///
+    /// The message will be bold and red using the [`Bold`] and [`NodeTag::Foreground(Color::Red)`] tags.
+    fn error(frame: &mut Frame, point: Point, str: &str) {
+        Self::rich_text(frame, point, str, vec![Bold, Foreground(Color::Red)]);
     }
 }
 
@@ -159,17 +285,24 @@ impl<'a> Renderable for Node<'a> {
     ///
     /// Each node type determines how its contents are laid out and drawn.
     /// This function delegates the actual rendering to the internal `NodeRenderer`.
-    fn render(&self, frame: &mut Frame, point: Point) {
+    fn render(self, frame: &mut Frame, point: Point) {
         match self {
             Node::None => {}
-            Node::Char(char) => NodeRenderer::render_char(frame, point, char),
-            Node::Text(str) => NodeRenderer::render_text(frame, point, str),
-            Node::Tile(tile) => NodeRenderer::render_tile(frame, point, tile),
+            Node::Char(char) => NodeRenderer::char(frame, point, char),
+            Node::RichChar(char, tags) => NodeRenderer::rich_char(frame, point, char, tags),
+            Node::Text(str) => NodeRenderer::text(frame, point, str),
+            Node::RichText(str, tags) => NodeRenderer::rich_text(frame, point, str, tags),
+            Node::Tile(tile) => NodeRenderer::tile(frame, point, tile),
             Node::VerticalContainer(elems) => NodeRenderer::vertical_container(frame, point, elems),
             Node::HorizontalContainer(elems) => {
                 NodeRenderer::horizontal_container(frame, point, elems)
             }
-            Node::Framed(elem) => NodeRenderer::render_framed(frame, point, elem),
+            Node::Framed(elem) => NodeRenderer::framed(frame, point, *elem),
+            Node::Menu(elems, selected_index) => {
+                NodeRenderer::menu(frame, point, elems, selected_index)
+            }
+            Node::Input(str, position) => NodeRenderer::input(frame, point, str, position),
+            Node::Error(str) => NodeRenderer::error(frame, point, str),
         }
     }
 
@@ -181,7 +314,9 @@ impl<'a> Renderable for Node<'a> {
         match self {
             Node::None => Size::new(0, 0),
             Node::Char(_) => Size::new(1, 1),
+            Node::RichChar(_, _) => Size::new(1, 1),
             Node::Text(str) => Size::new(str.len(), 1),
+            Node::RichText(str, _) => Size::new(str.len(), 1),
             Node::Tile(_) => Size::new(TILE_SIZE, TILE_SIZE),
             Node::VerticalContainer(elems) => elems
                 .iter()
@@ -197,6 +332,12 @@ impl<'a> Renderable for Node<'a> {
                     Size::new(acc.width + s.width, acc.height.max(s.height))
                 }),
             Node::Framed(elem) => elem.size() + Size::new(2, 2),
+            Node::Menu(elems, _) => Size::new(
+                elems.iter().map(|s| s.len()).max().unwrap_or(0) + 2,
+                elems.len(),
+            ),
+            Node::Input(str, _) => Size::new(str.len(), 1),
+            Node::Error(str) => Size::new(str.len(), 1),
         }
     }
 }
@@ -204,6 +345,7 @@ impl<'a> Renderable for Node<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::frame::cell::CellTag;
     use carcasonne_core::layout::point::Point;
     use carcasonne_core::layout::size::Size;
     use carcasonne_core::model::tile::Tile;
@@ -252,22 +394,15 @@ mod tests {
 
     #[test]
     fn test_size_vertical_container() {
-        let v = Node::VerticalContainer(vec![
-            Box::new(text_node("Hi")),
-            Box::new(char_node('X')),
-            Box::new(text_node("World")),
-        ]);
+        let v = Node::VerticalContainer(vec![text_node("Hi"), char_node('X'), text_node("World")]);
         // width = max(2,1,5) = 5, height = 1+1+1 = 3
         assert_eq!(v.size(), Size::new(5, 3));
     }
 
     #[test]
     fn test_size_horizontal_container() {
-        let h = Node::HorizontalContainer(vec![
-            Box::new(text_node("Hi")),
-            Box::new(char_node('X')),
-            Box::new(text_node("World")),
-        ]);
+        let h =
+            Node::HorizontalContainer(vec![text_node("Hi"), char_node('X'), text_node("World")]);
         // width = 2 + 1 + 5 = 8, height = max(1,1,1) = 1
         assert_eq!(h.size(), Size::new(8, 1));
     }
@@ -301,7 +436,7 @@ mod tests {
     #[test]
     fn test_render_vertical_container() {
         let mut frame = Frame::new(Size::new(10, 5));
-        let v = Node::VerticalContainer(vec![Box::new(text_node("A")), Box::new(text_node("BC"))]);
+        let v = Node::VerticalContainer(vec![text_node("A"), text_node("BC")]);
         v.render(&mut frame, Point::new(0, 0));
         assert_eq!(frame.cells[0][0].symbol, 'A');
         assert_eq!(frame.cells[1][0].symbol, 'B');
@@ -311,8 +446,7 @@ mod tests {
     #[test]
     fn test_render_horizontal_container() {
         let mut frame = Frame::new(Size::new(10, 3));
-        let h =
-            Node::HorizontalContainer(vec![Box::new(text_node("A")), Box::new(text_node("BC"))]);
+        let h = Node::HorizontalContainer(vec![text_node("A"), text_node("BC")]);
         h.render(&mut frame, Point::new(0, 0));
         assert_eq!(frame.cells[0][0].symbol, 'A');
         assert_eq!(frame.cells[0][1].symbol, 'B');
@@ -341,5 +475,96 @@ mod tests {
         // Check inner text position (offset by +1,+1 inside frame)
         assert_eq!(frame.cells[2][2].symbol, 'H');
         assert_eq!(frame.cells[2][3].symbol, 'i');
+    }
+
+    #[test]
+    fn test_render_rich_text_with_style() {
+        let mut frame = Frame::new(Size::new(10, 2));
+        let n = Node::RichText("Hi", vec![Underline, Foreground(Color::Green)]);
+        n.render(&mut frame, Point::new(0, 0));
+
+        assert_eq!(frame.cells[0][0].symbol, 'H');
+        assert!(frame.cells[0][0].tags.contains(&CellTag::Underline));
+        assert!(
+            frame.cells[0][0]
+                .tags
+                .contains(&CellTag::Foreground(crossterm::style::Color::Green))
+        );
+    }
+
+    #[test]
+    fn test_render_rich_char() {
+        let mut frame = Frame::new(Size::new(3, 3));
+        let n = Node::RichChar('X', vec![Bold, Foreground(Color::Blue)]);
+        n.render(&mut frame, Point::new(1, 1));
+
+        assert_eq!(frame.cells[1][1].symbol, 'X');
+        assert!(frame.cells[1][1].tags.contains(&CellTag::Bold));
+        assert!(
+            frame.cells[1][1]
+                .tags
+                .contains(&CellTag::Foreground(crossterm::style::Color::Blue))
+        );
+    }
+
+    #[test]
+    fn test_render_input_field() {
+        let mut frame = Frame::new(Size::new(10, 2));
+        let input = Node::Input("Hello", Point::new(2, 0));
+        input.render(&mut frame, Point::new(1, 1));
+
+        // Text starts at (1,1)
+        assert_eq!(frame.cells[1][1].symbol, 'H');
+        assert_eq!(frame.cursor, Some(Point::new(3, 1))); // 1 + 2 = 3
+    }
+
+    #[test]
+    fn test_render_error_message() {
+        let mut frame = Frame::new(Size::new(20, 1));
+        let err = Node::Error("Oops");
+        err.render(&mut frame, Point::new(0, 0));
+
+        assert_eq!(frame.cells[0][0].symbol, 'O');
+        assert!(frame.cells[0][0].tags.contains(&CellTag::Bold));
+        assert!(
+            frame.cells[0][0]
+                .tags
+                .contains(&CellTag::Foreground(crossterm::style::Color::Red))
+        );
+    }
+
+    #[test]
+    fn test_render_tile_stub() {
+        let mut frame = Frame::new(Size::new(5, 5));
+        let tile = tile_node();
+        tile.render(&mut frame, Point::new(0, 0));
+
+        for y in 0..TILE_SIZE {
+            for x in 0..TILE_SIZE {
+                assert_eq!(frame.cells[y][x].symbol, '.');
+            }
+        }
+    }
+
+    #[test]
+    fn test_render_menu_with_selection() {
+        let mut frame = Frame::new(Size::new(20, 5));
+        let menu = Node::Menu(vec!["Play", "Options", "Quit"], 1);
+        menu.render(&mut frame, Point::new(0, 0));
+
+        assert_eq!(frame.cells[0][0].symbol, CharDrawing::Radio.into());
+        assert_eq!(frame.cells[1][0].symbol, CharDrawing::SelectedRadio.into());
+        assert_eq!(frame.cells[1][2].symbol, 'O');
+        assert!(frame.cells[1][2].tags.contains(&CellTag::Underline));
+    }
+
+    #[test]
+    fn test_render_menu_empty() {
+        let mut frame = Frame::new(Size::new(10, 1));
+        let menu = Node::Menu(vec![], 0);
+        menu.render(&mut frame, Point::new(0, 0));
+
+        // Should not panic and frame remains untouched
+        assert_eq!(frame.cells[0][0].symbol, ' ');
     }
 }
