@@ -49,59 +49,59 @@ pub trait TownTileBuilder {
 
 impl TownTileBuilder for TileFactory {
     fn build_c_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("C")
             .add_shielded_town(vec![North, West, South, East])
             .build()
     }
     fn build_d_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("D")
             .add_town(vec![North])
             .add_road(vec![West, East])
             .build()
     }
     fn build_e_town() -> Tile {
-        TileBuilder::new().add_town(vec![North]).build()
+        TileBuilder::new("E").add_town(vec![North]).build()
     }
     fn build_f_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("F")
             .add_shielded_town(vec![West, East])
             .build()
     }
 
     fn build_g_town() -> Tile {
-        TileBuilder::new().add_town(vec![West, East]).build()
+        TileBuilder::new("G").add_town(vec![West, East]).build()
     }
 
     fn build_h_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("H")
             .add_town(vec![West])
             .add_town(vec![East])
             .build()
     }
 
     fn build_i_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("I")
             .add_town(vec![North])
             .add_town(vec![West])
             .build()
     }
 
     fn build_j_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("J")
             .add_town(vec![North])
             .add_road(vec![South, East])
             .build()
     }
 
     fn build_k_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("K")
             .add_town(vec![North])
-            .add_road(vec![West, East])
+            .add_road(vec![West, South])
             .build()
     }
 
     fn build_l_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("L")
             .add_town(vec![North])
             .add_road(vec![West])
             .add_road(vec![South])
@@ -110,48 +110,50 @@ impl TownTileBuilder for TileFactory {
     }
 
     fn build_m_town() -> Tile {
-        TileBuilder::new()
-            .add_shielded_town(vec![North, West])
+        TileBuilder::new("M")
+            .add_shielded_town(vec![North, East])
             .build()
     }
 
     fn build_n_town() -> Tile {
-        TileBuilder::new().add_town(vec![North, West]).build()
+        TileBuilder::new("N").add_town(vec![North, East]).build()
     }
 
     fn build_o_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("O")
             .add_shielded_town(vec![North, West])
             .add_road(vec![South, East])
             .build()
     }
 
     fn build_p_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("P")
             .add_town(vec![North, West])
             .add_road(vec![South, East])
             .build()
     }
 
     fn build_q_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("Q")
             .add_shielded_town(vec![North, West, East])
             .build()
     }
 
     fn build_r_town() -> Tile {
-        TileBuilder::new().add_town(vec![North, West, East]).build()
+        TileBuilder::new("R")
+            .add_town(vec![North, West, East])
+            .build()
     }
 
     fn build_s_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("S")
             .add_shielded_town(vec![North, West, East])
             .add_road(vec![South])
             .build()
     }
 
     fn build_t_town() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("T")
             .add_town(vec![North, West, East])
             .add_road(vec![South])
             .build()
@@ -169,7 +171,7 @@ mod tests {
     use std::any::TypeId;
 
     macro_rules! generate_town_tile_tests {
-    ( $( $name:ident => $tile_expr:expr, $towns:expr, $roads:expr );* $(;)? ) => {
+    ( $( $name:ident => $tile_expr:expr, $towns:expr, $roads:expr, $tile_id:expr );* $(;)? ) => {
         $(
             #[test]
             fn $name() {
@@ -198,35 +200,36 @@ mod tests {
                 for (feature, edges) in road_features.iter().zip($roads.iter()) {
                     assert_eq!(&feature.edges, edges);
                 }
+                assert_eq!(tile.tile_id, $tile_id, "Wrong tile ID for {}", stringify!($name));
             }
         )*
         };
     }
 
     generate_town_tile_tests! {
-        c_town => TileFactory::build_c_town(), vec![(&[North, West, South, East][..], true)], Vec::<&[Edge]>::new();
-        d_town => TileFactory::build_d_town(), vec![(&[North][..], false)], vec![&[West, East][..]];
-        e_town => TileFactory::build_e_town(), vec![(&[North][..], false)], Vec::<&[Edge]>::new();
-        f_town => TileFactory::build_f_town(), vec![(&[West, East][..], true)], Vec::<&[Edge]>::new();
-        g_town => TileFactory::build_g_town(), vec![(&[West, East][..], false)], Vec::<&[Edge]>::new();
+        c_town => TileFactory::build_c_town(), vec![(&[North, West, South, East][..], true)], Vec::<&[Edge]>::new(), "C";
+        d_town => TileFactory::build_d_town(), vec![(&[North][..], false)], vec![&[West, East][..]], "D";
+        e_town => TileFactory::build_e_town(), vec![(&[North][..], false)], Vec::<&[Edge]>::new(), "E";
+        f_town => TileFactory::build_f_town(), vec![(&[West, East][..], true)], Vec::<&[Edge]>::new(), "F";
+        g_town => TileFactory::build_g_town(), vec![(&[West, East][..], false)], Vec::<&[Edge]>::new(), "G";
         h_town => TileFactory::build_h_town(), vec![
             (&[West][..], false),
             (&[East][..], false)
-        ], Vec::<&[Edge]>::new();
+        ], Vec::<&[Edge]>::new(), "H";
         i_town => TileFactory::build_i_town(), vec![
             (&[North][..], false),
             (&[West][..], false)
-        ], Vec::<&[Edge]>::new();
-        j_town => TileFactory::build_j_town(), vec![(&[North][..], false)], vec![&[South, East][..]];
-        k_town => TileFactory::build_k_town(), vec![(&[North][..], false)], vec![&[West, East][..]];
-        l_town => TileFactory::build_l_town(), vec![(&[North][..], false)], vec![&[West][..], &[South][..], &[East][..]];
-        m_town => TileFactory::build_m_town(), vec![(&[North, West][..], true)], Vec::<&[Edge]>::new();
-        n_town => TileFactory::build_n_town(), vec![(&[North, West][..], false)], Vec::<&[Edge]>::new();
-        o_town => TileFactory::build_o_town(), vec![(&[North, West][..], true)], vec![&[South, East][..]];
-        p_town => TileFactory::build_p_town(), vec![(&[North, West][..], false)], vec![&[South, East][..]];
-        q_town => TileFactory::build_q_town(), vec![(&[North, West, East][..], true)], Vec::<&[Edge]>::new();
-        r_town => TileFactory::build_r_town(), vec![(&[North, West, East][..], false)], Vec::<&[Edge]>::new();
-        s_town => TileFactory::build_s_town(), vec![(&[North, West, East][..], true)], vec![&[South][..]];
-        t_town => TileFactory::build_t_town(), vec![(&[North, West, East][..], false)], vec![&[South][..]];
+        ], Vec::<&[Edge]>::new(), "I";
+        j_town => TileFactory::build_j_town(), vec![(&[North][..], false)], vec![&[South, East][..]], "J";
+        k_town => TileFactory::build_k_town(), vec![(&[North][..], false)], vec![&[West, South][..]], "K";
+        l_town => TileFactory::build_l_town(), vec![(&[North][..], false)], vec![&[West][..], &[South][..], &[East][..]], "L";
+        m_town => TileFactory::build_m_town(), vec![(&[North, East][..], true)], Vec::<&[Edge]>::new(), "M";
+        n_town => TileFactory::build_n_town(), vec![(&[North, East][..], false)], Vec::<&[Edge]>::new(), "N";
+        o_town => TileFactory::build_o_town(), vec![(&[North, West][..], true)], vec![&[South, East][..]], "O";
+        p_town => TileFactory::build_p_town(), vec![(&[North, West][..], false)], vec![&[South, East][..]], "P";
+        q_town => TileFactory::build_q_town(), vec![(&[North, West, East][..], true)], Vec::<&[Edge]>::new(), "Q";
+        r_town => TileFactory::build_r_town(), vec![(&[North, West, East][..], false)], Vec::<&[Edge]>::new(), "R";
+        s_town => TileFactory::build_s_town(), vec![(&[North, West, East][..], true)], vec![&[South][..]], "S";
+        t_town => TileFactory::build_t_town(), vec![(&[North, West, East][..], false)], vec![&[South][..]], "T";
     }
 }

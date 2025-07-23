@@ -1,4 +1,5 @@
 mod node;
+mod tile_renderer;
 
 use crate::frame::Frame;
 use carcasonne_core::layout::point::Point;

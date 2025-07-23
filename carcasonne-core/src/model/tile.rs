@@ -7,6 +7,7 @@ use crate::model::tile_feature::TileFeature;
 /// with optional extended behavior through a `TileExtension` trait object.
 #[derive(Debug, Clone)]
 pub struct Tile {
+    pub tile_id: String,
     /// The features present on the tile (e.g., roads, cities).
     pub tile_features: Vec<TileFeature>,
 

@@ -50,7 +50,7 @@ mod tests {
 
     #[test]
     fn test_game_builder_add_tiles_once() {
-        let tile = TileBuilder::new().add_town(vec![North]).build();
+        let tile = TileBuilder::new("TEST").add_town(vec![North]).build();
         let game = GameBuilder::new().add_tiles(tile.clone(), 3).build();
 
         assert_eq!(game.available_tiles.len(), 3);
@@ -67,8 +67,8 @@ mod tests {
 
     #[test]
     fn test_game_builder_add_tiles_multiple() {
-        let tile1 = TileBuilder::new().add_town(vec![North]).build();
-        let tile2 = TileBuilder::new().add_road(vec![North]).build();
+        let tile1 = TileBuilder::new("TEST").add_town(vec![North]).build();
+        let tile2 = TileBuilder::new("TEST").add_road(vec![North]).build();
 
         let game = GameBuilder::new()
             .add_tiles(tile1.clone(), 2)

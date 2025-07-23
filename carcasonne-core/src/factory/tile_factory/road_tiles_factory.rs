@@ -20,20 +20,20 @@ pub trait RoadTileBuilder {
 
 impl RoadTileBuilder for TileFactory {
     fn build_u_road() -> Tile {
-        TileBuilder::new().add_road(vec![North, South]).build()
+        TileBuilder::new("U").add_road(vec![North, South]).build()
     }
     fn build_v_road() -> Tile {
-        TileBuilder::new().add_road(vec![North, West]).build()
+        TileBuilder::new("V").add_road(vec![North, West]).build()
     }
     fn build_w_road() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("W")
             .add_road(vec![North])
             .add_road(vec![West])
             .add_road(vec![South])
             .build()
     }
     fn build_x_road() -> Tile {
-        TileBuilder::new()
+        TileBuilder::new("X")
             .add_road(vec![North])
             .add_road(vec![West])
             .add_road(vec![South])
@@ -49,7 +49,7 @@ mod tests {
     use crate::model::tile_feature::{Edge, Road};
     use std::any::TypeId;
 
-    fn assert_road_edges(tile: &Tile, expected_edges: Vec<Vec<Edge>>) {
+    fn assert_road_edges(tile: &Tile, expected_edges: Vec<Vec<Edge>>, expected_id: &str) {
         assert_eq!(tile.tile_features.len(), expected_edges.len());
         for (feature, expected) in tile.tile_features.iter().zip(expected_edges) {
             assert_eq!(
@@ -58,24 +58,25 @@ mod tests {
             );
             assert_eq!(feature.edges, expected);
         }
+        assert_eq!(tile.tile_id, expected_id)
     }
 
     #[test]
     fn test_build_u_road() {
         let tile = TileFactory::build_u_road();
-        assert_road_edges(&tile, vec![vec![North, South]]);
+        assert_road_edges(&tile, vec![vec![North, South]], "U");
     }
 
     #[test]
     fn test_build_v_road() {
         let tile = TileFactory::build_v_road();
-        assert_road_edges(&tile, vec![vec![North, West]]);
+        assert_road_edges(&tile, vec![vec![North, West]], "V");
     }
 
     #[test]
     fn test_build_w_road() {
         let tile = TileFactory::build_w_road();
-        assert_road_edges(&tile, vec![vec![North], vec![West], vec![South]]);
+        assert_road_edges(&tile, vec![vec![North], vec![West], vec![South]], "W");
     }
 
     #[test]
@@ -84,6 +85,7 @@ mod tests {
         assert_road_edges(
             &tile,
             vec![vec![North], vec![West], vec![South], vec![East]],
+            "X",
         );
     }
 }

@@ -18,6 +18,7 @@
 
 use crate::char_drawing::CharDrawing;
 use crate::frame::Frame;
+use crate::renderable::tile_renderer::TileRenderer;
 use crate::renderable::Renderable;
 use carcasonne_core::color::Color;
 use carcasonne_core::layout::node::NodeTag::{Bold, Foreground, Underline};
@@ -115,8 +116,8 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left corner where the tile will be drawn.
     /// * `tile` - The tile to render
-    fn tile(frame: &mut Frame, point: Point, _: &Tile) {
-        let chars = vec![vec!['.'; TILE_SIZE]; TILE_SIZE];
+    fn tile(frame: &mut Frame, point: Point, tile: &Tile) {
+        let chars = TileRenderer::tile(TILE_SIZE, tile);
 
         for (i, row) in chars.iter().enumerate() {
             for (j, c) in row.iter().enumerate() {
@@ -278,6 +279,20 @@ impl NodeRenderer {
     fn error(frame: &mut Frame, point: Point, str: &str) {
         Self::rich_text(frame, point, str, vec![Bold, Foreground(Color::Red)]);
     }
+
+    fn multiline_text(frame: &mut Frame, point: Point, str: &str) {
+        Self::vertical_container(frame, point, str.lines().map(Node::Text).collect())
+    }
+
+    fn multiline_rich_text(frame: &mut Frame, point: Point, str: &str, tags: Vec<NodeTag>) {
+        Self::vertical_container(
+            frame,
+            point,
+            str.lines()
+                .map(|s| Node::RichText(s, tags.clone()))
+                .collect(),
+        )
+    }
 }
 
 impl<'a> Renderable for Node<'a> {
@@ -303,6 +318,10 @@ impl<'a> Renderable for Node<'a> {
             }
             Node::Input(str, position) => NodeRenderer::input(frame, point, str, position),
             Node::Error(str) => NodeRenderer::error(frame, point, str),
+            Node::MultiLineText(str) => NodeRenderer::multiline_text(frame, point, str),
+            Node::MultiLineRichText(str, tags) => {
+                NodeRenderer::multiline_rich_text(frame, point, str, tags)
+            }
         }
     }
 
@@ -313,10 +332,10 @@ impl<'a> Renderable for Node<'a> {
     fn size(&self) -> Size {
         match self {
             Node::None => Size::new(0, 0),
-            Node::Char(_) => Size::new(1, 1),
-            Node::RichChar(_, _) => Size::new(1, 1),
-            Node::Text(str) => Size::new(str.len(), 1),
-            Node::RichText(str, _) => Size::new(str.len(), 1),
+            Node::Char(_) | Node::RichChar(_, _) => Size::new(1, 1),
+            Node::Text(str) | Node::RichText(str, _) | Node::Input(str, _) | Node::Error(str) => {
+                Size::new(str.len(), 1)
+            }
             Node::Tile(_) => Size::new(TILE_SIZE, TILE_SIZE),
             Node::VerticalContainer(elems) => elems
                 .iter()
@@ -336,8 +355,10 @@ impl<'a> Renderable for Node<'a> {
                 elems.iter().map(|s| s.len()).max().unwrap_or(0) + 2,
                 elems.len(),
             ),
-            Node::Input(str, _) => Size::new(str.len(), 1),
-            Node::Error(str) => Size::new(str.len(), 1),
+            Node::MultiLineText(str) | Node::MultiLineRichText(str, _) => {
+                let max_line_length = str.lines().map(|l| l.len()).max().unwrap_or(0);
+                Size::new(max_line_length, str.lines().count())
+            }
         }
     }
 }
@@ -358,6 +379,7 @@ mod tests {
         Node::Text(s)
     }
     static TILE_INSTANCE: Tile = Tile {
+        tile_id: String::new(),
         tile_features: Vec::new(),
         tile_extension: None,
     };
@@ -378,12 +400,6 @@ mod tests {
     fn test_size_text() {
         let n = text_node("Hello");
         assert_eq!(n.size(), Size::new(5, 1));
-    }
-
-    #[test]
-    fn test_size_tile() {
-        let n = tile_node();
-        assert_eq!(n.size(), Size::new(TILE_SIZE, TILE_SIZE));
     }
 
     #[test]

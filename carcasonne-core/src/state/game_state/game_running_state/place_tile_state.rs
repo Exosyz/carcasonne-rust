@@ -1,7 +1,8 @@
 use crate::action::Action;
+use crate::color::Color;
 use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
-use crate::layout::node::Node;
+use crate::layout::node::{Node, NodeTag};
 use crate::model::tile::Tile;
 use crate::state::game_state::game_running_state::select_tile_state::SelectTileState;
 use crate::state::StateResult::Transition;
@@ -26,7 +27,14 @@ impl State for PlaceTileState {
     }
 
     fn draw(&'_ self) -> Node<'_> {
-        Node::Tile(&self.tile)
+        Node::HorizontalContainer(vec![
+            Node::Framed(Box::new(Node::Tile(&self.tile))),
+            Node::None,
+            Node::Framed(Box::new(Node::MultiLineRichText(
+                Box::leak(format!("{:#?}", self.tile).into_boxed_str()),
+                vec![NodeTag::Foreground(Color::Blue)],
+            ))),
+        ])
     }
     fn handle_input(&self, event: InputEvent) -> Action {
         match event {

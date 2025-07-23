@@ -22,7 +22,9 @@ use std::fmt::Debug;
 ///
 /// impl TileExtension for Abbey {}
 /// ```
-pub trait TileExtension: Debug + DynClone + Any + Sync {}
+pub trait TileExtension: Debug + DynClone + Any + Sync {
+    fn as_any(&self) -> &dyn Any;
+}
 
 // Enables cloning of trait objects for `TileExtension`.
 clone_trait_object!(TileExtension);
@@ -33,4 +35,8 @@ clone_trait_object!(TileExtension);
 /// which can be handled dynamically at runtime.
 #[derive(Debug, Clone)]
 pub struct Abbey {}
-impl TileExtension for Abbey {}
+impl TileExtension for Abbey {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}

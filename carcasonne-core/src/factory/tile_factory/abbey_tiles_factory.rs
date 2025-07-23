@@ -18,10 +18,13 @@ pub trait AbbeyTileBuilder {
 
 impl AbbeyTileBuilder for TileFactory {
     fn build_a_abbey() -> Tile {
-        TileBuilder::new().add_road(vec![South]).add_abbey().build()
+        TileBuilder::new("A")
+            .add_road(vec![South])
+            .add_abbey()
+            .build()
     }
     fn build_b_abbey() -> Tile {
-        TileBuilder::new().add_abbey().build()
+        TileBuilder::new("B").add_abbey().build()
     }
 }
 
@@ -50,6 +53,8 @@ mod tests {
             tile.tile_extension.unwrap().as_ref().type_id(),
             TypeId::of::<Abbey>()
         );
+
+        assert_eq!(tile.tile_id, "A")
     }
 
     #[test]
@@ -63,5 +68,7 @@ mod tests {
             tile.tile_extension.unwrap().as_ref().type_id(),
             TypeId::of::<Abbey>()
         );
+
+        assert_eq!(tile.tile_id, "B")
     }
 }

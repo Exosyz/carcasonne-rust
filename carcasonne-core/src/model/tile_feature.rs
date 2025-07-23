@@ -34,7 +34,9 @@ pub struct TileFeature {
 /// Trait representing a type of tile feature (e.g., road, town, field).
 ///
 /// This trait allows for dynamic dispatch and cloning of feature types.
-pub trait TileFeatureType: Debug + DynClone + Any + Sync {}
+pub trait TileFeatureType: Debug + DynClone + Any + Sync {
+    fn as_any(&self) -> &dyn Any;
+}
 
 // Enables cloning of `TileFeatureType` trait objects.
 clone_trait_object!(TileFeatureType);
@@ -42,18 +44,28 @@ clone_trait_object!(TileFeatureType);
 /// A concrete implementation of a tile feature: a town.
 #[derive(Debug, Clone)]
 pub struct Town {}
-impl TileFeatureType for Town {}
+impl TileFeatureType for Town {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 
 /// A concrete implementation of a tile feature: a road.
 #[derive(Debug, Clone)]
 pub struct Road {}
-impl TileFeatureType for Road {}
+impl TileFeatureType for Road {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 
 /// Trait representing an optional enhancement on a tile feature,
 /// such as a shield in a town.
 ///
 /// Enhancements may affect scoring or gameplay behavior.
-pub trait TileFeatureEnhancement: Debug + DynClone + Any + Sync {}
+pub trait TileFeatureEnhancement: Debug + DynClone + Any + Sync {
+    fn as_any(&self) -> &dyn Any;
+}
 
 // Enables cloning of `TileFeatureEnhancement` trait objects.
 clone_trait_object!(TileFeatureEnhancement);
@@ -63,4 +75,8 @@ clone_trait_object!(TileFeatureEnhancement);
 /// Shields typically grant bonus points when features are scored.
 #[derive(Debug, Clone)]
 pub struct Shield {}
-impl TileFeatureEnhancement for Shield {}
+impl TileFeatureEnhancement for Shield {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}

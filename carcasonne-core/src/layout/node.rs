@@ -28,6 +28,9 @@ pub enum Node<'a> {
     /// A horizontal string with styling tags applied.
     RichText(&'a str, Vec<NodeTag>),
 
+    MultiLineText(&'a str),
+    MultiLineRichText(&'a str, Vec<NodeTag>),
+
     /// A reference to a tile to render.
     Tile(&'a Tile),
 
@@ -54,6 +57,7 @@ pub enum Node<'a> {
 ///
 /// Tags represent text styles or color attributes that affect rendering.
 /// These are applied to `RichChar` and `RichText` nodes.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum NodeTag {
     /// Underline the text.
     Underline,

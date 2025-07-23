@@ -1,2 +1,2 @@
 pub mod game_factory;
-mod tile_factory;
+pub mod tile_factory;

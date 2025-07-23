@@ -4,7 +4,7 @@ use std::ops::Add;
 ///
 /// This struct is commonly used for positioning elements in a grid or layout.
 /// Both `x` and `y` are `usize`, making it suitable for indexing 2D arrays.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point {
     /// The horizontal coordinate.
     pub x: usize,

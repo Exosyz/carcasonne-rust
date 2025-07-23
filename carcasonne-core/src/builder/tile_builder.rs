@@ -10,14 +10,16 @@ use crate::model::tile_feature::{Edge, Road, Shield, TileFeature, Town};
 ///
 /// The builder methods consume and return `self` for ergonomic chaining.
 pub struct TileBuilder {
+    tile_id: String,
     tile_features: Vec<TileFeature>,
     tile_extension: Option<Box<dyn TileExtension>>,
 }
 
 impl TileBuilder {
     /// Creates a new empty `TileBuilder`.
-    pub fn new() -> Self {
+    pub fn new(id: &str) -> Self {
         Self {
+            tile_id: id.into(),
             tile_features: Vec::new(),
             tile_extension: None,
         }
@@ -79,6 +81,7 @@ impl TileBuilder {
     /// Finalizes the builder and returns the constructed `Tile`.
     pub fn build(self) -> Tile {
         Tile {
+            tile_id: self.tile_id,
             tile_features: self.tile_features,
             tile_extension: self.tile_extension,
         }
@@ -93,15 +96,18 @@ mod tests {
 
     #[test]
     fn test_new_tile_builder() {
-        let builder = TileBuilder::new();
+        let builder = TileBuilder::new("1234567890");
         assert!(builder.tile_features.is_empty());
         assert!(builder.tile_extension.is_none());
+        assert_eq!(builder.tile_id, "1234567890");
     }
 
     #[test]
     fn test_add_town() {
         let edges = vec![Edge::North, Edge::East];
-        let tile = TileBuilder::new().add_town(edges.clone()).build();
+        let tile = TileBuilder::new("1234567890")
+            .add_town(edges.clone())
+            .build();
 
         assert_eq!(tile.tile_features.len(), 1);
         let feature = &tile.tile_features[0];
@@ -117,7 +123,9 @@ mod tests {
     #[test]
     fn test_add_shielded_town() {
         let edges = vec![Edge::South, Edge::West];
-        let tile = TileBuilder::new().add_shielded_town(edges.clone()).build();
+        let tile = TileBuilder::new("1234567890")
+            .add_shielded_town(edges.clone())
+            .build();
 
         assert_eq!(tile.tile_features.len(), 1);
         let feature = &tile.tile_features[0];
@@ -137,7 +145,9 @@ mod tests {
     #[test]
     fn test_add_road() {
         let edges = vec![Edge::North];
-        let tile = TileBuilder::new().add_road(edges.clone()).build();
+        let tile = TileBuilder::new("1234567890")
+            .add_road(edges.clone())
+            .build();
 
         assert_eq!(tile.tile_features.len(), 1);
         let feature = &tile.tile_features[0];
@@ -153,7 +163,7 @@ mod tests {
 
     #[test]
     fn test_add_abbey() {
-        let tile = TileBuilder::new().add_abbey().build();
+        let tile = TileBuilder::new("1234567890").add_abbey().build();
         assert!(tile.tile_extension.is_some());
         assert_eq!(
             tile.tile_extension.unwrap().as_ref().type_id(),
@@ -166,7 +176,7 @@ mod tests {
         let edges_town = vec![Edge::North, Edge::South];
         let edges_road = vec![Edge::East, Edge::West];
 
-        let tile = TileBuilder::new()
+        let tile = TileBuilder::new("1234567890")
             .add_town(edges_town.clone())
             .add_road(edges_road.clone())
             .add_abbey()

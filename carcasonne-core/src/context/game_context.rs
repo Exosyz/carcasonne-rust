@@ -82,6 +82,7 @@ mod tests {
 
     fn dummy_tile() -> Tile {
         Tile {
+            tile_id: "".into(),
             tile_features: vec![],
             tile_extension: None,
         }

@@ -39,6 +39,7 @@ mod tests {
 
     fn dummy_tile() -> Tile {
         Tile {
+            tile_id: String::from("ABC"),
             tile_features: vec![],
             tile_extension: None,
         }
