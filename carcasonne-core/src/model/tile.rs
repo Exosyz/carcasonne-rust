@@ -17,3 +17,21 @@ pub struct Tile {
     /// (e.g., monastery) to extend base functionality.
     pub tile_extension: Option<Box<dyn TileExtension>>,
 }
+
+impl Tile {
+    pub fn rotate_left(&mut self) -> &mut Self {
+        self.tile_features.iter_mut().for_each(|f| {
+            f.rotate_left();
+        });
+
+        self
+    }
+
+    pub fn rotate_right(&mut self) -> &mut Self {
+        self.tile_features.iter_mut().for_each(|f| {
+            f.rotate_right();
+        });
+
+        self
+    }
+}

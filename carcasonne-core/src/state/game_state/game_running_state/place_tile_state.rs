@@ -3,6 +3,7 @@ use crate::color::Color;
 use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
 use crate::layout::node::{Node, NodeTag};
+use crate::model::rotation::Rotation;
 use crate::model::tile::Tile;
 use crate::state::game_state::game_running_state::select_tile_state::SelectTileState;
 use crate::state::StateResult::Transition;
@@ -28,7 +29,7 @@ impl State for PlaceTileState {
 
     fn draw(&'_ self) -> Node<'_> {
         Node::HorizontalContainer(vec![
-            Node::Framed(Box::new(Node::Tile(&self.tile))),
+            Node::Framed(Box::new(Node::Tile(&self.tile, &Rotation::R0))),
             Node::None,
             Node::Framed(Box::new(Node::MultiLineRichText(
                 Box::leak(format!("{:#?}", self.tile).into_boxed_str()),

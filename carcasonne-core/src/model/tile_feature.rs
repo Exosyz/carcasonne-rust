@@ -15,6 +15,52 @@ pub enum Edge {
     South,
 }
 
+impl Edge {
+    pub fn rotate_left(&self) -> Self {
+        match self {
+            Edge::North => Edge::West,
+            Edge::West => Edge::South,
+            Edge::South => Edge::East,
+            Edge::East => Edge::North,
+        }
+    }
+
+    pub fn rotate_right(&self) -> Self {
+        match self {
+            Edge::North => Edge::East,
+            Edge::East => Edge::South,
+            Edge::South => Edge::West,
+            Edge::West => Edge::North,
+        }
+    }
+}
+
+impl Edge {
+    pub fn are_opposite(&self, other: &Edge) -> bool {
+        matches!(
+            (self, other),
+            (Edge::South, Edge::North)
+                | (Edge::North, Edge::South)
+                | (Edge::West, Edge::East)
+                | (Edge::East, Edge::West)
+        )
+    }
+
+    pub fn are_perpendicular(&self, other: &Edge) -> bool {
+        matches!(
+            (self, other),
+            (Edge::East, Edge::North)
+                | (Edge::North, Edge::East)
+                | (Edge::West, Edge::North)
+                | (Edge::North, Edge::West)
+                | (Edge::West, Edge::South)
+                | (Edge::South, Edge::West)
+                | (Edge::East, Edge::South)
+                | (Edge::South, Edge::East)
+        )
+    }
+}
+
 /// A feature present on a tile (e.g., town, road), possibly with enhancements.
 ///
 /// A `TileFeature` defines:
@@ -29,6 +75,17 @@ pub struct TileFeature {
     pub edges: Vec<Edge>,
     /// An optional enhancement that provides additional functionality or scoring.
     pub enhancement: Option<Box<dyn TileFeatureEnhancement>>,
+}
+
+impl TileFeature {
+    pub fn rotate_left(&mut self) -> &mut Self {
+        self.edges = self.edges.iter().map(|e| e.rotate_left()).collect();
+        self
+    }
+    pub fn rotate_right(&mut self) -> &mut Self {
+        self.edges = self.edges.iter().map(|e| e.rotate_right()).collect();
+        self
+    }
 }
 
 /// Trait representing a type of tile feature (e.g., road, town, field).

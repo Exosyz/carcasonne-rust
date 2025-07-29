@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 /// A 2D point with non-negative integer coordinates.
 ///
@@ -63,6 +63,30 @@ impl Add<Point> for Point {
         Point {
             x: self.x + other.x,
             y: self.y + other.y,
+        }
+    }
+}
+
+impl Sub<Point> for Point {
+    type Output = Point;
+
+    /// Adds two `Point`s by summing their `x` and `y` coordinates.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use carcasonne_core::layout::point::Point;
+    ///
+    /// let a = Point::new(1, 2);
+    /// let b = Point::new(3, 4);
+    /// let c = a + b;
+    ///
+    /// assert_eq!(c, Point::new(4, 6));
+    /// ```
+    fn sub(self, other: Point) -> Self::Output {
+        Point {
+            x: self.x.saturating_sub(other.x),
+            y: self.y.saturating_sub(other.y),
         }
     }
 }

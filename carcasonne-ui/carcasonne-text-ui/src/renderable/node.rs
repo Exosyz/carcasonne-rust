@@ -25,6 +25,7 @@ use carcasonne_core::layout::node::NodeTag::{Bold, Foreground, Underline};
 use carcasonne_core::layout::node::{Node, NodeTag};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
+use carcasonne_core::model::rotation::Rotation;
 use carcasonne_core::model::tile::Tile;
 
 /// The default width and height (in characters) used to render a `Tile` node.
@@ -116,14 +117,14 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left corner where the tile will be drawn.
     /// * `tile` - The tile to render
-    fn tile(frame: &mut Frame, point: Point, tile: &Tile) {
-        let chars = TileRenderer::tile(TILE_SIZE, tile);
+    fn tile(frame: &mut Frame, point: Point, tile: &Tile, rotation: &Rotation) {
+        let chars = TileRenderer::tile(TILE_SIZE, tile, rotation);
 
-        for (i, row) in chars.iter().enumerate() {
-            for (j, c) in row.iter().enumerate() {
-                frame.char_simple(point + Point::new(i, j), *c)
-            }
-        }
+        chars.iter().enumerate().for_each(|(j, row)| {
+            row.iter()
+                .enumerate()
+                .for_each(|(i, c)| frame.char_simple(point + Point::new(i, j), *c))
+        });
     }
 
     /// Renders a framed box around a child node, using `+`, `-`, and `|` characters.
@@ -307,7 +308,7 @@ impl<'a> Renderable for Node<'a> {
             Node::RichChar(char, tags) => NodeRenderer::rich_char(frame, point, char, tags),
             Node::Text(str) => NodeRenderer::text(frame, point, str),
             Node::RichText(str, tags) => NodeRenderer::rich_text(frame, point, str, tags),
-            Node::Tile(tile) => NodeRenderer::tile(frame, point, tile),
+            Node::Tile(tile, rotation) => NodeRenderer::tile(frame, point, tile, rotation),
             Node::VerticalContainer(elems) => NodeRenderer::vertical_container(frame, point, elems),
             Node::HorizontalContainer(elems) => {
                 NodeRenderer::horizontal_container(frame, point, elems)
@@ -336,7 +337,7 @@ impl<'a> Renderable for Node<'a> {
             Node::Text(str) | Node::RichText(str, _) | Node::Input(str, _) | Node::Error(str) => {
                 Size::new(str.len(), 1)
             }
-            Node::Tile(_) => Size::new(TILE_SIZE, TILE_SIZE),
+            Node::Tile(_, _) => Size::new(TILE_SIZE, TILE_SIZE),
             Node::VerticalContainer(elems) => elems
                 .iter()
                 .map(|e| e.size())
@@ -384,7 +385,7 @@ mod tests {
         tile_extension: None,
     };
     fn tile_node() -> Node<'static> {
-        Node::Tile(&TILE_INSTANCE)
+        Node::Tile(&TILE_INSTANCE, &Rotation::R0)
     }
     fn none_node() -> Node<'static> {
         Node::None

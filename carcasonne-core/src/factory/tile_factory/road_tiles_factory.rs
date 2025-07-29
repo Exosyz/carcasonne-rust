@@ -23,11 +23,11 @@ impl RoadTileBuilder for TileFactory {
         TileBuilder::new("U").add_road(vec![North, South]).build()
     }
     fn build_v_road() -> Tile {
-        TileBuilder::new("V").add_road(vec![North, West]).build()
+        TileBuilder::new("V").add_road(vec![South, West]).build()
     }
     fn build_w_road() -> Tile {
         TileBuilder::new("W")
-            .add_road(vec![North])
+            .add_road(vec![East])
             .add_road(vec![West])
             .add_road(vec![South])
             .build()
@@ -70,13 +70,13 @@ mod tests {
     #[test]
     fn test_build_v_road() {
         let tile = TileFactory::build_v_road();
-        assert_road_edges(&tile, vec![vec![North, West]], "V");
+        assert_road_edges(&tile, vec![vec![South, West]], "V");
     }
 
     #[test]
     fn test_build_w_road() {
         let tile = TileFactory::build_w_road();
-        assert_road_edges(&tile, vec![vec![North], vec![West], vec![South]], "W");
+        assert_road_edges(&tile, vec![vec![East], vec![West], vec![South]], "W");
     }
 
     #[test]

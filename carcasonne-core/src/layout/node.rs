@@ -1,5 +1,6 @@
 use crate::color::Color;
 use crate::layout::point::Point;
+use crate::model::rotation::Rotation;
 use crate::model::tile::Tile;
 
 /// Represents an element in the layout tree used for rendering.
@@ -32,7 +33,7 @@ pub enum Node<'a> {
     MultiLineRichText(&'a str, Vec<NodeTag>),
 
     /// A reference to a tile to render.
-    Tile(&'a Tile),
+    Tile(&'a Tile, &'a Rotation),
 
     /// A vertical container stacking child nodes top-to-bottom.
     VerticalContainer(Vec<Node<'a>>),
