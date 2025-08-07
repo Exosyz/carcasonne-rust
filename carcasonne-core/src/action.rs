@@ -26,4 +26,8 @@ pub enum Action {
     None,
     Push(char),
     Remove,
+    RotateLeft,
+    RotateRight,
+    ZoomIn,
+    ZoomOut,
 }

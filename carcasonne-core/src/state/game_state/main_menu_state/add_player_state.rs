@@ -1,3 +1,4 @@
+use crate::context::game_context::GameContext;
 use crate::context::main_menu_context::MainMenuContext;
 use crate::state::game_state::main_menu_state::manage_player_state::ManagePlayerOptions;
 use crate::state::shared_state::input_state::InputBehaviour;
@@ -9,32 +10,44 @@ use crate::state::StateResult;
 pub struct AddPlayerState;
 
 impl InputBehaviour<MainMenuContext> for AddPlayerState {
-    fn apply_transition(value: &str, ctx: &mut SharedContext<MainMenuContext>) -> StateResult {
-        if let SharedContext::Some(context) = ctx {
-            context
-                .try_add_player(value.into())
-                .expect("TODO: panic message")
+    fn apply_transition(
+        value: &str,
+        mut ctx: SharedContext<MainMenuContext>,
+        game_context: &mut GameContext,
+    ) -> Result<StateResult, String> {
+        if let SharedContext::Some(menu_context) = &mut ctx {
+            match menu_context.get_next_color() {
+                Some(color) => match game_context.try_add_player(value.into(), color) {
+                    Ok(_) => Ok(StateResult::Transition(Box::new(MenuState::<
+                        ManagePlayerOptions,
+                        MainMenuContext,
+                    >::new_from_context(
+                        ctx, game_context
+                    )))),
+                    Err(err) => Err(err),
+                },
+                None => Err("Max player count reach".into()),
+            }
+        } else {
+            panic!("Invalid context");
         }
-        StateResult::Transition(Box::new(
-            MenuState::<ManagePlayerOptions, MainMenuContext>::new_from_context(std::mem::take(
-                ctx,
-            )),
-        ))
     }
 
     fn title() -> &'static str {
         "Add Player"
     }
 
-    fn validate<'a>(value: &str, ctx: &SharedContext<MainMenuContext>) -> Option<&'a str> {
+    fn validate<'a>(
+        value: &str,
+        _ctx: &SharedContext<MainMenuContext>,
+        game_context: &GameContext,
+    ) -> Result<(), &'a str> {
         if value.is_empty() {
-            return Some("Player name cannot be empty");
+            return Err("Player name cannot be empty");
         }
-        if let SharedContext::Some(context) = ctx
-            && context.get_players().iter().any(|p| p.name == value)
-        {
-            return Some("Player already exists");
+        if game_context.players().iter().any(|p| p.name == value) {
+            return Err("Player already exists");
         }
-        None
+        Ok(())
     }
 }

@@ -1,5 +1,6 @@
 use crate::action::Action;
 use crate::color::Color;
+use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
 use crate::layout::node::{Node, NodeTag};
 use crate::state::shared_state::SharedContext;
@@ -17,7 +18,11 @@ where
 {
     /// Apply the transition associated with this option,
     /// potentially modifying the shared context and returning a `StateResult`.
-    fn apply_transition(&self, context: SharedContext<Context>) -> StateResult;
+    fn apply_transition(
+        &self,
+        context: SharedContext<Context>,
+        game_context: &mut GameContext,
+    ) -> StateResult;
 
     /// Return the title of the menu.
     /// This is shown as a header when drawing the menu.
@@ -42,7 +47,7 @@ pub trait MenuDefaultOptions {
 /// Used when menu options depend on external context (e.g., game state).
 pub trait MenuContextualOptions<Context> {
     /// Returns a vector of options appropriates for the given context.
-    fn options_for(context: &Context) -> Vec<Self>
+    fn options_for(context: &Context, game_context: &GameContext) -> Vec<Self>
     where
         Self: Sized;
 }
@@ -82,12 +87,11 @@ where
     Options: MenuContextualOptions<Context> + MenuOptions<Context>,
 {
     /// Create a new menu state with options determined by the given context.
-    pub fn new_from_context(context: SharedContext<Context>) -> Self {
+    pub fn new_from_context(context: SharedContext<Context>, game_context: &GameContext) -> Self {
         Self {
-            options: if let SharedContext::Some(ctx) = &context {
-                Options::options_for(ctx)
-            } else {
-                vec![]
+            options: match &context {
+                SharedContext::Some(ctx) => Options::options_for(ctx, game_context),
+                SharedContext::None => vec![],
             },
             context,
             ..Default::default()
@@ -143,7 +147,7 @@ where
     ///
     /// Moves selection on `Top`/`Bottom` actions or applies the selected option's
     /// transition on `Validate`. Returns a `StateResult` indicating the next step.
-    fn update(&mut self, action: Action) -> StateResult {
+    fn update(&mut self, context: &mut GameContext, action: Action) -> StateResult {
         match action {
             Action::Bottom => {
                 self.move_selection(1);
@@ -155,7 +159,7 @@ where
             }
             Action::Validate => self
                 .selected_option()
-                .apply_transition(std::mem::take(&mut self.context)),
+                .apply_transition(std::mem::take(&mut self.context), context),
             _ => StateResult::Stay(false),
         }
     }

@@ -7,7 +7,7 @@ pub enum Rotation {
 }
 
 impl Rotation {
-    pub fn rotated_right(self) -> Self {
+    pub fn rotate_right(self) -> Self {
         match self {
             Rotation::R0 => Rotation::R90,
             Rotation::R90 => Rotation::R180,
@@ -16,7 +16,7 @@ impl Rotation {
         }
     }
 
-    pub fn rotated_left(self) -> Self {
+    pub fn rotate_left(self) -> Self {
         match self {
             Rotation::R0 => Rotation::R270,
             Rotation::R90 => Rotation::R0,

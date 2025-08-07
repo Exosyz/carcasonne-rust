@@ -1,0 +1,83 @@
+## Le game board
+- [x] Dimension infiny => utlisation d'une Map
+- [x] Tenir a jour les dimention réél du board
+- [ ] Avoir un historique de qui a jouer ou et quoi
+- [ ] La première tuile placé sera forcement en `0, 0`
+- [ ] Une puile prend 1 "case", et on ne peux pas placer une tuile sur une tuile deja placé
+## Le view board
+- [ ] Rectangle de `N`x`M` représentant la zone affiché
+- [ ] Possibilité de se déplacer sur dans le view board
+	- [ ] Définir 4 touche pour le faire
+	- [ ] Définir des limites, en fonction des bornes du game board
+- [ ] Possibilité de zoom dans la view board
+	- [ ] Définir 2 touches pour le faire
+
+## Les tuiles
+- [ ] Colorer les tuiles en fonction de qui l'a joué
+- [x] render une tuile
+- [ ] faire en sorte que les tuiles que l'on place blink
+	- [x] SetAttribute(Attribute::SlowBlink)
+	- [ ] Il faut changer la boucle de rendu pour rendre une tuile blinking (plusieurs charactère a rendre)$
+		- [ ] Ce qui implique de ne plus faire en sorte qu'un input soit bloquant
+		- [ ] Intéressant a mettre en place dans le futur
+	- [ ] un système d'ancrage et de flexgrow dynamique permettant de créé se que l'on veut 
+	- [ ] 
+
+## Le système de rendering
+- [ ] Ajouter un genre de SxProps Pour permettre d'ajouter "simplement" des contraintes sur des elements
+	- [ ] *Avec une Enum se serait peut être plus simple et facielement applicable dans l'idée des NodeTag qui sont aujourd'hui plus des SXProps de Text/Char
+- [ ]  Split l'enum de node en un trait nore renderable
+	- [ ] Ajouter un NodeWrapper pour permettre d'ajouter le trait a chaque element pour bien split les comportement
+	- [ ] retirer la gestion actuelle du size
+	- [ ] Si n composant son fullsize, il faut alors render chaque composant avec available_size/n
+- [ ] Ajouter une fonction de calcul de size
+	- [ ]  a besoin de pre-order les composant a rendre
+	- [ ] Si un composant et full size il sera compute en dernier
+	- [ ] un texte/char/tuile on des taille définit
+	- [ ] prend en entrer l'espace restant disponible dans le parent
+		- [ ] Pour les composant full size
+	- [ ] Gérer une partie de SxProps
+- [ ] Ajouter une fonction de calcul de position
+	- [ ] permet de precompute les positions de chaque element
+	- [ ] Par default un composant et ancré top left
+	- [ ] Gérer une partie de SxProps
+- [ ] Ajouter une fonction de calcul de rendu
+	- [ ] Si un child n'a pas sufisament de place pour se render, on render le max possible 
+		- [ ] si du text on remplace les 3 dernier chars par des `... 
+		- [ ] si c'est vers le bas peut importe le type on ignore les caractéres manquant
+	- [ ] On peut conserver une bonne partie des ancienne méthode de rendu
+	- [ ] 
+#### Réflexion
+- [x] Comment faire en sorte de pouvoir utiliser tous l'espace disponible ?
+	- [x] Avoir 1 composant fullsized
+		- [x] compliquer a mettre en place juste un composant qui foncitonne comme ceci
+	- [x] Ajouter un genre de SxProps Pour permettre d'ajouter "simplement" des contraintes sur des elements
+		- [x] Avec une Enum se serait peut être plus simple et facielement applicable dans l'idée des NodeTag qui sont aujourd'hui plus des SXProps de Text/Char
+		- [ ] 
+- [x] Est-ce que toute les node on besoin d'etre full sized ?
+	- [x] Se serait le plus simple et on les render tous au centre au centre 
+	- [x] Je pense que c'est une mauvaise idée, ca limiterais 
+- [x] séparer les containers des Node ?
+	- [x] Risque de complique un peu les chose 
+	- [x] en meme temps utiliser un trait permetterais de simplifier le fichier node qui commence a déborder
+		- [x] cela implique de tranformer les node build par des node renderable (car split de crate)
+			- [x] pas si compliquer a faire
+	- [x] Surement une très bonne chose a faire pour la suite, permettrais de beaucoup simplifier les choses et de scale plus facilement et proprement
+- [ ] Le nouveau système serait
+	- [x] un système d'ancrage et de flexgrow dynamique permettant de créé se que l'on veut 
+	- [x] ajouter un système de position relative
+	- [x] est-ce qu'il y a encore besoin du systéme de size, si par default le body (le composant initial est fullsize) et que tous est build relativement
+		- [x] Je ne pense pas il faudrait le retirer
+	- [ ] Est-ce qu'il serait possible de rerender certaine partie du terminal uniquement sans rerender la total
+		- [ ] Est-ce utile ?
+			- [ ] Pour une question de perf
+			- [ ] Ca implique de ne pas render les chose existante 
+			- [ ] Et de force clear les chose qui n'existe plus
+			- [ ] Peut etre pas utile pour le moment optimisation inutile
+	- [x] Est-ce qu'un enfant doit avoir la référence de son parent pour se rendre ?
+		- [x] Non mais il doit connaitre l'espace disponible dans le parent
+		- [x] Il faut aussi ajouter un genre d'autre de render
+
+	- [ ] 
+	- [ ] 
+		- [ ] 

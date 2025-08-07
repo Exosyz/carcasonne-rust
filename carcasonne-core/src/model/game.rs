@@ -12,6 +12,14 @@ pub struct GameTiles {
     pub available_tiles: Vec<Tile>,
 }
 
+impl From<Vec<Tile>> for GameTiles {
+    fn from(tiles: Vec<Tile>) -> Self {
+        GameTiles {
+            available_tiles: tiles,
+        }
+    }
+}
+
 impl GameTiles {
     /// Randomly selects and removes a tile from the remaining pool.
     ///
@@ -21,6 +29,7 @@ impl GameTiles {
     /// # Examples
     ///
     /// ```
+    /// use carcasonne_core::model::board::Board;
     /// use carcasonne_core::model::game::GameTiles;
     ///
     /// let mut game_tiles = GameTiles { available_tiles: vec![] };

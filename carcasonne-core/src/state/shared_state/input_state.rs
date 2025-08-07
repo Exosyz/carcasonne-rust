@@ -1,5 +1,6 @@
 use crate::action::Action;
 use crate::color::Color;
+use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
 use crate::layout::node::{Node, NodeTag};
 use crate::layout::point::Point;
@@ -17,9 +18,17 @@ pub trait InputBehaviour<Context = ()>
 where
     Self: Clone,
 {
-    fn apply_transition(value: &str, ctx: &mut SharedContext<Context>) -> StateResult;
+    fn apply_transition(
+        value: &str,
+        ctx: SharedContext<Context>,
+        game_context: &mut GameContext,
+    ) -> Result<StateResult, String>;
     fn title() -> &'static str;
-    fn validate<'a>(value: &str, ctx: &SharedContext<Context>) -> Option<&'a str>;
+    fn validate<'a>(
+        value: &str,
+        ctx: &SharedContext<Context>,
+        game_context: &GameContext,
+    ) -> Result<(), &'a str>;
 }
 
 /// A state for managing input UI and logic, parameterized by the input behavior and context.
@@ -29,7 +38,8 @@ where
 {
     context: SharedContext<Context>,
     value: String,
-    x: usize,                   // Cursor position in the input string
+    x: usize, // Cursor position in the input string
+    error: Option<String>,
     _input: PhantomData<Input>, // Marker to keep the Input generic parameter
 }
 
@@ -42,6 +52,7 @@ where
             context,
             value: String::new(),
             x: 0,
+            error: None,
             _input: PhantomData,
         }
     }
@@ -51,7 +62,7 @@ impl<Input, Context> State for InputState<Input, Context>
 where
     Input: InputBehaviour<Context>,
 {
-    fn update(&mut self, action: Action) -> StateResult {
+    fn update(&mut self, game_context: &mut GameContext, action: Action) -> StateResult {
         match action {
             Action::Right => {
                 if self.x < self.value.len() {
@@ -69,15 +80,23 @@ where
                     StateResult::Stay(false)
                 }
             }
-            Action::Validate => {
-                if Input::validate(&self.value, &self.context).is_some() {
-                    // Validation failed, stay in state with error shown
+            Action::Validate => match Input::validate(&self.value, &self.context, game_context) {
+                Ok(()) => match Input::apply_transition(
+                    &self.value,
+                    std::mem::take(&mut self.context),
+                    game_context,
+                ) {
+                    Ok(result) => result,
+                    Err(error) => {
+                        self.error = Some(error.to_string());
+                        StateResult::Stay(true)
+                    }
+                },
+                Err(error) => {
+                    self.error = Some(error.to_string());
                     StateResult::Stay(true)
-                } else {
-                    // Validation passed, proceed with transition
-                    Input::apply_transition(&self.value, &mut self.context)
                 }
-            }
+            },
             Action::Push(c) => {
                 self.value.insert(self.x, c);
                 self.x += 1;
@@ -109,7 +128,7 @@ where
             Node::Input(self.value.as_str(), Point::new(self.x, 0)),
         ];
 
-        if let Some(error) = Input::validate(&self.value, &self.context) {
+        if let Some(error) = &self.error {
             elems.push(Node::Error(error));
         }
 

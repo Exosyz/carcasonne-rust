@@ -1,11 +1,13 @@
 use carcasonne_console_input::input_handler::read_input_event;
 use carcasonne_core::action::Action;
+use carcasonne_core::context::game_context::GameContext;
 use carcasonne_core::context::main_menu_context::MainMenuContext;
+use carcasonne_core::factory::game_factory::GameTilesFactory;
 use carcasonne_core::renderer::Renderer;
-use carcasonne_core::state::game_state::main_menu_state::{MainMenuOptions, MenuState};
-use carcasonne_core::state::shared_state::SharedContext;
 use carcasonne_core::state::State;
 use carcasonne_core::state::StateResult::{Exit, Stay, Transition};
+use carcasonne_core::state::game_state::main_menu_state::{MainMenuOptions, MenuState};
+use carcasonne_core::state::shared_state::SharedContext;
 use std::cell::RefCell;
 
 /// Main game engine struct managing the state and rendering.
@@ -13,14 +15,16 @@ use std::cell::RefCell;
 /// This struct holds the current state and a renderer instance.
 /// It drives the main game loop, processes input events, updates the state,
 /// and triggers rendering accordingly.
-pub struct Game<T: Renderer> {
+pub struct Game<'context, T: Renderer> {
     /// The current active state.
     state: Option<Box<dyn State>>,
     /// Renderer used to draw the current state.
     renderer: RefCell<T>,
+
+    context: GameContext<'context>,
 }
 
-impl<T: Renderer> Game<T> {
+impl<'context, T: Renderer> Game<'context, T> {
     /// Creates a new game instance with the given renderer.
     ///
     /// Initializes the state to the main menu (`MenuState`).
@@ -40,6 +44,7 @@ impl<T: Renderer> Game<T> {
                 )),
             )),
             renderer,
+            context: GameContext::new(GameTilesFactory::build_base_game()),
         }
     }
     /// Returns a reference to the current state.
@@ -111,7 +116,7 @@ impl<T: Renderer> Game<T> {
     fn apply_transition(&mut self, action: Action) -> bool {
         let mut current_state = self.take_state();
 
-        match current_state.update(action) {
+        match current_state.update(&mut self.context, action) {
             Transition(state) => self.change_state(state, true),
             Stay(rerender) => {
                 self.change_state(current_state, rerender);

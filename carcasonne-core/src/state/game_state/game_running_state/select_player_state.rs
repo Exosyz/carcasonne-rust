@@ -2,25 +2,22 @@ use crate::action::Action;
 use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
 use crate::layout::node::Node;
-use crate::state::game_state::game_running_state::place_tile_state::PlaceTileState;
-use crate::state::StateResult::{Exit, Transition};
+use crate::state::game_state::game_running_state::select_tile_state::SelectTileState;
+use crate::state::StateResult::Transition;
 use crate::state::{State, StateResult};
 
-pub struct SelectTileState;
+pub struct SelectPlayerState {}
 
-impl SelectTileState {
+impl SelectPlayerState {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl State for SelectTileState {
+impl State for SelectPlayerState {
     fn update(&mut self, context: &mut GameContext, _action: Action) -> StateResult {
-        if let Some(tile) = context.select_random_tile() {
-            Transition(Box::new(PlaceTileState::new(tile)))
-        } else {
-            Exit
-        }
+        context.set_next_player();
+        Transition(Box::new(SelectTileState::new()))
     }
     fn draw(&'_ self) -> Node<'_> {
         Node::None

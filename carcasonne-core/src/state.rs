@@ -1,4 +1,5 @@
 use crate::action::Action;
+use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
 use crate::layout::node::Node;
 
@@ -45,7 +46,7 @@ pub trait State {
     /// # Returns
     ///
     /// A `StateResult` indicating what to do next.
-    fn update(&mut self, action: Action) -> StateResult;
+    fn update(&mut self, context: &mut GameContext<'_>, action: Action) -> StateResult;
 
     /// Renders the state as a UI `Node` (tree structure).
     ///

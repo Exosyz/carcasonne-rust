@@ -1,3 +1,5 @@
+use crate::color::Color;
+use crate::model::board::Board;
 use crate::model::game::GameTiles;
 use crate::model::player::Player;
 use crate::model::tile::Tile;
@@ -6,20 +8,25 @@ use rand::seq::SliceRandom;
 use std::collections::VecDeque;
 
 #[derive(Default)]
-pub struct GameContext {
+pub struct GameContext<'board> {
     /// The list of remaining tiles in the game.
     available_tiles: Vec<Tile>,
     /// The list of all players
     players: VecDeque<Player>,
+
+    current_player_index: Option<usize>,
+
+    board: Board<'board>,
 }
 
-impl GameContext {
-    pub fn new(game_tiles: GameTiles, players: Vec<Player>) -> Self {
+impl<'board> GameContext<'board> {
+    pub fn new(game_tiles: GameTiles) -> Self {
         Self {
             available_tiles: game_tiles.available_tiles,
-            players: players.into(),
+            ..Default::default()
         }
     }
+
     /// Randomly selects and removes a tile from the remaining pool.
     ///
     /// Internally, this method shuffles the remaining tiles and pops one
@@ -33,7 +40,7 @@ impl GameContext {
     /// use carcasonne_core::model::game::GameTiles;
     /// use carcasonne_core::model::player::Player;
     ///
-    /// let mut game = GameContext::new(GameTiles {available_tiles:vec![]}, vec![Player::new("A".into(), Color::Red), Player::new("B".into(), Color::Red)]);
+    /// let mut game = GameContext::new(GameTiles {available_tiles:vec![]});
     /// let tile = game.select_random_tile();
     /// ```
     pub fn select_random_tile(&mut self) -> Option<Tile> {
@@ -53,25 +60,48 @@ impl GameContext {
     /// # Panics
     ///
     /// Panics if the list of players is empty, as `unwrap` is called on `pop_front` and `back`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use carcasonne_core::color::Color;
-    /// use carcasonne_core::context::game_context::GameContext;
-    /// use carcasonne_core::model::game::GameTiles;
-    /// use carcasonne_core::model::player::Player;
-    ///
-    /// let mut game = GameContext::new(GameTiles {available_tiles:vec![]}, vec![Player::new("A".into(), Color::Red), Player::new("B".into(), Color::Red)]);
-    ///
-    /// let current_player = game.get_next_player();
-    /// println!("It's {}'s turn!", current_player.name);
-    /// ```
-    pub fn get_next_player(&mut self) -> &Player {
-        let player = self.players.pop_front().unwrap();
-        self.players.push_back(player);
+    pub fn set_next_player(&mut self) {
+        if !self.players.is_empty() {
+            // Rotate the deque
+            if let Some(player) = self.players.pop_front() {
+                self.players.push_back(player);
+            }
+            // The current player is now at the back
+            self.current_player_index = Option::from(self.players.len() - 1);
+        }
+    }
 
-        self.players.back().unwrap()
+    pub fn current_player(&self) -> Option<&Player> {
+        if let Some(idx) = self.current_player_index {
+            return self.players.get(idx);
+        }
+        None
+    }
+
+    pub fn players(&self) -> &VecDeque<Player> {
+        &self.players
+    }
+
+    pub fn try_add_player(&mut self, name: String, color: Color) -> Result<(), String> {
+        if self.players.iter().filter(|p| p.name == name).count() > 0 {
+            return Err("Player already exists".into());
+        }
+
+        self.players.push_back(Player::new(name, color));
+        Ok(())
+    }
+
+    pub fn remove_player(&mut self, name: String) -> Result<Color, String> {
+        match self.players.iter().position(|p| p.name == name) {
+            Some(index) => {
+                if let Some(player) = self.players.remove(index) {
+                    Ok(player.color)
+                } else {
+                    Err("Player does not exist".into())
+                }
+            }
+            None => Err("Player does not exist".into()),
+        }
     }
 }
 
@@ -93,6 +123,8 @@ mod tests {
         let mut game_tiles = GameContext {
             available_tiles: vec![dummy_tile()],
             players: vec![].into(),
+            current_player_index: None,
+            board: Default::default(),
         };
 
         let tile = game_tiles.select_random_tile();
@@ -109,6 +141,8 @@ mod tests {
         let mut game_tiles = GameContext {
             available_tiles: vec![],
             players: vec![].into(),
+            current_player_index: None,
+            board: Default::default(),
         };
         let tile = game_tiles.select_random_tile();
         assert!(
@@ -128,6 +162,8 @@ mod tests {
                 dummy_tile(),
             ],
             players: vec![].into(),
+            current_player_index: None,
+            board: Default::default(),
         };
 
         let mut drawn = vec![];
@@ -148,10 +184,14 @@ mod tests {
         let mut game_tiles_1 = GameContext {
             available_tiles: tiles.clone(),
             players: vec![].into(),
+            current_player_index: None,
+            board: Default::default(),
         };
         let mut game_tiles_2 = GameContext {
             available_tiles: tiles.clone(),
             players: vec![].into(),
+            current_player_index: None,
+            board: Default::default(),
         };
 
         // Shuffle both

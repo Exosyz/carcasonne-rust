@@ -1,7 +1,9 @@
 pub mod place_tile_state;
+mod select_player_state;
 pub mod select_tile_state;
 
 use crate::action::Action;
+use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
 use crate::layout::node::Node;
 use crate::state::game_state::stop_state::StopState;
@@ -21,9 +23,9 @@ impl GameRunningState {
 }
 
 impl State for GameRunningState {
-    fn update(&mut self, action: Action) -> StateResult {
+    fn update(&mut self, context: &mut GameContext, action: Action) -> StateResult {
         match &mut self.current_state {
-            Some(current_state) => match current_state.update(action) {
+            Some(current_state) => match current_state.update(context, action) {
                 Transition(new_state) => {
                     self.current_state = Some(new_state);
                     Stay(true)

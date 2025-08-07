@@ -1,9 +1,9 @@
 mod add_player_state;
 pub mod manage_player_state;
 mod remove_player_state;
+
 use crate::context::game_context::GameContext;
 use crate::context::main_menu_context::MainMenuContext;
-use crate::factory::game_factory::GameTilesFactory;
 use crate::state::game_state::game_running_state::select_tile_state::SelectTileState;
 use crate::state::game_state::game_running_state::GameRunningState;
 use crate::state::game_state::main_menu_state::manage_player_state::ManagePlayerOptions;
@@ -33,19 +33,22 @@ impl MenuDefaultOptions for MainMenuOptions {
 }
 
 impl MenuOptions<MainMenuContext> for MainMenuOptions {
-    fn apply_transition(&self, context: SharedContext<MainMenuContext>) -> StateResult {
+    fn apply_transition(
+        &self,
+        context: SharedContext<MainMenuContext>,
+        game_context: &mut GameContext,
+    ) -> StateResult {
         match self {
             MainMenuOptions::StartGame => StateResult::Transition(Box::new(GameRunningState::new(
-                Box::new(SelectTileState::new(GameContext::new(
-                    GameTilesFactory::build_base_game(),
-                    vec![],
-                ))),
+                Box::new(SelectTileState::new()),
             ))),
-            MainMenuOptions::ManagePlayers => {
-                StateResult::Transition(Box::new(
-                    MenuState::<ManagePlayerOptions, MainMenuContext>::new_from_context(context),
-                ))
-            }
+            MainMenuOptions::ManagePlayers => StateResult::Transition(Box::new(MenuState::<
+                ManagePlayerOptions,
+                MainMenuContext,
+            >::new_from_context(
+                context,
+                game_context,
+            ))),
             MainMenuOptions::Quit => StateResult::Exit,
         }
     }

@@ -1,3 +1,4 @@
+use crate::context::game_context::GameContext;
 use crate::context::main_menu_context::MainMenuContext;
 use crate::state::game_state::main_menu_state::add_player_state::AddPlayerState;
 use crate::state::game_state::main_menu_state::remove_player_state::RemovePlayerOption;
@@ -15,13 +16,13 @@ pub enum ManagePlayerOptions {
 }
 
 impl MenuContextualOptions<MainMenuContext> for ManagePlayerOptions {
-    fn options_for(context: &MainMenuContext) -> Vec<Self>
+    fn options_for(_context: &MainMenuContext, game_context: &GameContext) -> Vec<Self>
     where
         Self: Sized,
     {
         let mut options = vec![ManagePlayerOptions::AddPlayer];
 
-        if !context.get_players().is_empty() {
+        if !game_context.players().is_empty() {
             options.push(ManagePlayerOptions::RemovePlayer);
         }
 
@@ -31,19 +32,26 @@ impl MenuContextualOptions<MainMenuContext> for ManagePlayerOptions {
 }
 
 impl MenuOptions<MainMenuContext> for ManagePlayerOptions {
-    fn apply_transition(&self, context: SharedContext<MainMenuContext>) -> StateResult {
+    fn apply_transition(
+        &self,
+        ctx: SharedContext<MainMenuContext>,
+        game_context: &mut GameContext,
+    ) -> StateResult {
         match self {
             ManagePlayerOptions::AddPlayer => {
                 StateResult::Transition(Box::new(
-                    InputState::<AddPlayerState, MainMenuContext>::new(context),
+                    InputState::<AddPlayerState, MainMenuContext>::new(ctx),
                 ))
             }
             ManagePlayerOptions::RemovePlayer => StateResult::Transition(Box::new(
-                MenuState::<RemovePlayerOption, MainMenuContext>::new_from_context(context),
+                MenuState::<RemovePlayerOption, MainMenuContext>::new_from_context(
+                    ctx,
+                    game_context,
+                ),
             )),
             ManagePlayerOptions::GotoMenu => {
                 StateResult::Transition(Box::new(
-                    MenuState::<MainMenuOptions, MainMenuContext>::new(context),
+                    MenuState::<MainMenuOptions, MainMenuContext>::new(ctx),
                 ))
             }
         }

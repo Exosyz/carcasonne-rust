@@ -55,6 +55,7 @@ impl Cell {
                 CellTag::Bold => queue!(out, SetAttribute(Attribute::Bold)),
                 CellTag::Foreground(color) => queue!(out, SetForegroundColor(*color)),
                 CellTag::Background(color) => queue!(out, SetBackgroundColor(*color)),
+                CellTag::Blinking => queue!(out, SetAttribute(Attribute::SlowBlink)),
             }
             .expect("Fail to apply style command")
         });
@@ -72,6 +73,7 @@ pub enum CellTag {
     Underline,
     /// Bold attribute.
     Bold,
+    Blinking,
 }
 
 impl From<&NodeTag> for CellTag {
@@ -93,6 +95,7 @@ impl From<&NodeTag> for CellTag {
             NodeTag::Bold => CellTag::Bold,
             NodeTag::Foreground(color) => CellTag::Foreground(ColorWrapper(color.clone()).into()),
             NodeTag::Background(color) => CellTag::Background(ColorWrapper(color.clone()).into()),
+            NodeTag::Blinking => CellTag::Blinking,
         }
     }
 }

@@ -3,6 +3,7 @@ use crate::color::Color;
 /// Represents a player in the game.
 ///
 /// Each player has a unique name and an associated color for identification.
+#[derive(Debug)]
 pub struct Player {
     /// The player's name.
     pub name: String,

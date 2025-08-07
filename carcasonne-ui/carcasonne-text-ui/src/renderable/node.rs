@@ -18,8 +18,8 @@
 
 use crate::char_drawing::CharDrawing;
 use crate::frame::Frame;
-use crate::renderable::tile_renderer::TileRenderer;
 use crate::renderable::Renderable;
+use crate::renderable::tile_renderer::TileRenderer;
 use carcasonne_core::color::Color;
 use carcasonne_core::layout::node::NodeTag::{Bold, Foreground, Underline};
 use carcasonne_core::layout::node::{Node, NodeTag};
@@ -27,12 +27,8 @@ use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
 use carcasonne_core::model::rotation::Rotation;
 use carcasonne_core::model::tile::Tile;
-
-/// The default width and height (in characters) used to render a `Tile` node.
-///
-/// This constant determines the grid size for all tiles. Currently fixed to `5`,
-/// rendering tiles as 5x5 character matrices.
-pub const TILE_SIZE: usize = 5;
+use carcasonne_core::model::tile_size::TileSize;
+use crossterm::terminal::size;
 
 /// Stateless helper for rendering `Node` elements into a `Frame`.
 ///
@@ -117,8 +113,14 @@ impl NodeRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left corner where the tile will be drawn.
     /// * `tile` - The tile to render
-    fn tile(frame: &mut Frame, point: Point, tile: &Tile, rotation: &Rotation) {
-        let chars = TileRenderer::tile(TILE_SIZE, tile, rotation);
+    fn tile(
+        frame: &mut Frame,
+        point: Point,
+        tile: &Tile,
+        rotation: &Rotation,
+        tile_size: &TileSize,
+    ) {
+        let chars = TileRenderer::tile(tile_size.get_size(), tile, rotation);
 
         chars.iter().enumerate().for_each(|(j, row)| {
             row.iter()
@@ -183,6 +185,10 @@ impl NodeRenderer {
             elem.render(frame, Point::new(point.x, current_y));
             current_y += size.height;
         }
+    }
+
+    fn fullscreen_container(frame: &mut Frame, point: Point, elem: Node) {
+
     }
 
     /// Renders a horizontal container by laying out child nodes left-to-right.
@@ -308,11 +314,14 @@ impl<'a> Renderable for Node<'a> {
             Node::RichChar(char, tags) => NodeRenderer::rich_char(frame, point, char, tags),
             Node::Text(str) => NodeRenderer::text(frame, point, str),
             Node::RichText(str, tags) => NodeRenderer::rich_text(frame, point, str, tags),
-            Node::Tile(tile, rotation) => NodeRenderer::tile(frame, point, tile, rotation),
+            Node::Tile(tile, rotation, size) => {
+                NodeRenderer::tile(frame, point, tile, rotation, size)
+            }
             Node::VerticalContainer(elems) => NodeRenderer::vertical_container(frame, point, elems),
             Node::HorizontalContainer(elems) => {
                 NodeRenderer::horizontal_container(frame, point, elems)
             }
+            Node::FullScreenContainer(elem) => NodeRenderer::fullscreen_container(frame, point, *elem),
             Node::Framed(elem) => NodeRenderer::framed(frame, point, *elem),
             Node::Menu(elems, selected_index) => {
                 NodeRenderer::menu(frame, point, elems, selected_index)
@@ -337,7 +346,7 @@ impl<'a> Renderable for Node<'a> {
             Node::Text(str) | Node::RichText(str, _) | Node::Input(str, _) | Node::Error(str) => {
                 Size::new(str.len(), 1)
             }
-            Node::Tile(_, _) => Size::new(TILE_SIZE, TILE_SIZE),
+            Node::Tile(_, _, size) => Size::new(size.get_size(), size.get_size()),
             Node::VerticalContainer(elems) => elems
                 .iter()
                 .map(|e| e.size())
@@ -351,6 +360,10 @@ impl<'a> Renderable for Node<'a> {
                 .fold(Size::new(0, 0), |acc, s| {
                     Size::new(acc.width + s.width, acc.height.max(s.height))
                 }),
+            Node::FullScreenContainer(_) => match size() {
+                Ok((width, height)) => Size::new(width as usize, height as usize),
+                Err(_) => panic!("Cannot get the size of terminal"),
+            },
             Node::Framed(elem) => elem.size() + Size::new(2, 2),
             Node::Menu(elems, _) => Size::new(
                 elems.iter().map(|s| s.len()).max().unwrap_or(0) + 2,
@@ -385,7 +398,7 @@ mod tests {
         tile_extension: None,
     };
     fn tile_node() -> Node<'static> {
-        Node::Tile(&TILE_INSTANCE, &Rotation::R0)
+        Node::Tile(&TILE_INSTANCE, &Rotation::R0, &TileSize::Small)
     }
     fn none_node() -> Node<'static> {
         Node::None
@@ -554,10 +567,10 @@ mod tests {
     fn test_render_tile_stub() {
         let mut frame = Frame::new(Size::new(5, 5));
         let tile = tile_node();
+        let size = tile.size();
         tile.render(&mut frame, Point::new(0, 0));
-
-        for y in 0..TILE_SIZE {
-            for x in 0..TILE_SIZE {
+        for y in 0..size.height {
+            for x in 0..size.width {
                 assert_eq!(frame.cells[y][x].symbol, '.');
             }
         }

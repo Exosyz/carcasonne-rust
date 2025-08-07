@@ -2,6 +2,7 @@ use crate::color::Color;
 use crate::layout::point::Point;
 use crate::model::rotation::Rotation;
 use crate::model::tile::Tile;
+use crate::model::tile_size::TileSize;
 
 /// Represents an element in the layout tree used for rendering.
 ///
@@ -33,7 +34,7 @@ pub enum Node<'a> {
     MultiLineRichText(&'a str, Vec<NodeTag>),
 
     /// A reference to a tile to render.
-    Tile(&'a Tile, &'a Rotation),
+    Tile(&'a Tile, &'a Rotation, &'a TileSize),
 
     /// A vertical container stacking child nodes top-to-bottom.
     VerticalContainer(Vec<Node<'a>>),
@@ -43,6 +44,8 @@ pub enum Node<'a> {
 
     /// A single child node drawn with a border frame around it.
     Framed(Box<Node<'a>>),
+
+    FullScreenContainer(Box<Node<'a>>),
 
     /// A menu list with options (string slices) and a selected index.
     Menu(Vec<&'a str>, usize),
@@ -71,4 +74,6 @@ pub enum NodeTag {
 
     /// Set the background color.
     Background(Color),
+
+    Blinking,
 }

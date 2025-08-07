@@ -1,4 +1,5 @@
 use crate::action::Action;
+use crate::context::game_context::GameContext;
 use crate::input_handler::InputEvent;
 use crate::layout::node::Node;
 use crate::state::StateResult::Exit;
@@ -7,7 +8,7 @@ use crate::state::{State, StateResult};
 pub struct StopState {}
 
 impl State for StopState {
-    fn update(&mut self, _: Action) -> StateResult {
+    fn update(&mut self, _: &mut GameContext, _: Action) -> StateResult {
         Exit
     }
 
