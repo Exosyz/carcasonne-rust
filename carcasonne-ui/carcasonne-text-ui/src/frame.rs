@@ -2,7 +2,7 @@ pub mod cell;
 
 use crate::char_drawing::CharDrawing;
 use crate::frame::cell::{Cell, CellTag};
-use crate::renderable::Renderable;
+use crate::renderable::{get_node_renderer, Renderable};
 use carcasonne_core::layout::node::{Node, NodeTag};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
@@ -108,8 +108,9 @@ impl From<Node<'_>> for Frame {
     ///
     /// A `Frame` containing the rendered node.
     fn from(value: Node) -> Self {
-        let mut frame = Frame::new(value.size());
-        value.render(&mut frame, Point::zero());
+        let renderer = get_node_renderer(value);
+        let mut frame = Frame::new(renderer.size());
+        renderer.render(&mut frame, Point::zero());
         frame
     }
 }

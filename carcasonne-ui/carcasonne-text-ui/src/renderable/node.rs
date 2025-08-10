@@ -18,8 +18,8 @@
 
 use crate::char_drawing::CharDrawing;
 use crate::frame::Frame;
-use crate::renderable::Renderable;
 use crate::renderable::tile_renderer::TileRenderer;
+use crate::renderable::Renderable;
 use carcasonne_core::color::Color;
 use carcasonne_core::layout::node::NodeTag::{Bold, Foreground, Underline};
 use carcasonne_core::layout::node::{Node, NodeTag};
@@ -28,7 +28,6 @@ use carcasonne_core::layout::size::Size;
 use carcasonne_core::model::rotation::Rotation;
 use carcasonne_core::model::tile::Tile;
 use carcasonne_core::model::tile_size::TileSize;
-use crossterm::terminal::size;
 
 /// Stateless helper for rendering `Node` elements into a `Frame`.
 ///
@@ -38,72 +37,6 @@ use crossterm::terminal::size;
 struct NodeRenderer;
 
 impl NodeRenderer {
-    /// Renders a single character at the specified position in the frame.
-    ///
-    /// # Arguments
-    /// * `frame` - The drawing buffer where the character will be placed.
-    /// * `point` - The coordinates where the character will be drawn.
-    /// * `char` - The character to render.
-    fn char(frame: &mut Frame, point: Point, char: char) {
-        frame.char_simple(point, char);
-    }
-
-    /// Renders a character on the given frame at a specific point, applying
-    /// style metadata from the provided tags.
-    ///
-    /// This function extracts visual information (such as foreground and background
-    /// colors) from the given `tags` and applies it when rendering the character
-    /// onto the `frame`.
-    ///
-    /// # Arguments
-    ///
-    /// * `frame` - A mutable reference to the rendering `Frame`.
-    /// * `point` - The position on the frame where the character will be drawn.
-    /// * `char` - The character to render.
-    /// * `tags` - A collection of `NodeTag` metadata used to influence visual style.
-    fn rich_char(frame: &mut Frame, point: Point, char: char, tags: Vec<NodeTag>) {
-        frame.char(point, char, &tags);
-    }
-
-    /// Renders a string of characters horizontally starting at the given point.
-    ///
-    /// Each character is placed one position to the right of the previous.
-    ///
-    /// # Arguments
-    /// * `frame` - The drawing buffer.
-    /// * `point` - The starting position for the first character.
-    /// * `str` - The string to render.
-    fn text(frame: &mut Frame, point: Point, str: &str) {
-        str.chars()
-            .enumerate()
-            .for_each(|(i, c)| frame.char_simple(point + Point::new(i, 0), c));
-    }
-
-    /// Renders a string on the given frame starting at a specific point,
-    /// applying style metadata from the provided tags to each character.
-    ///
-    /// This function iterates over each character in the string and renders it
-    /// horizontally on the frame, starting at the given `point`. Style information
-    /// such as color can be derived from the `tags`.
-    ///
-    /// # Arguments
-    ///
-    /// * `frame` - A mutable reference to the rendering [`Frame`] where the text will be drawn.
-    /// * `point` - The top-left starting position for the string.
-    /// * `str` - The string to be rendered.
-    /// * `tags` - A list of [`NodeTag`] used to determine visual properties such as
-    ///   foreground and background color.
-    ///
-    /// # Notes
-    ///
-    /// * Characters are placed horizontally with no line wrapping.
-    /// * You can extend this for rich text layouts by supporting bold, italic.
-    fn rich_text(frame: &mut Frame, point: Point, str: &str, tags: Vec<NodeTag>) {
-        str.chars()
-            .enumerate()
-            .for_each(|(i, c)| frame.char(point + Point::new(i, 0), c, &tags));
-    }
-
     /// Renders a tile using a square grid of placeholder characters.
     ///
     /// This is a stub implementation: the tile is filled with `.` characters
@@ -170,44 +103,6 @@ impl NodeRenderer {
         elem.render(frame, point + Point::new(1, 1));
     }
 
-    /// Renders a vertical container by stacking its child nodes top-to-bottom.
-    ///
-    /// Each child node is placed immediately below the previous one.
-    ///
-    /// # Arguments
-    /// * `frame` - The drawing buffer.
-    /// * `point` - The top-left starting point of the container.
-    /// * `elems` - A list of nodes to render vertically.
-    fn vertical_container(frame: &mut Frame, point: Point, elems: Vec<Node>) {
-        let mut current_y = point.y;
-        for elem in elems {
-            let size = elem.size();
-            elem.render(frame, Point::new(point.x, current_y));
-            current_y += size.height;
-        }
-    }
-
-    fn fullscreen_container(frame: &mut Frame, point: Point, elem: Node) {
-
-    }
-
-    /// Renders a horizontal container by laying out child nodes left-to-right.
-    ///
-    /// Each child node is placed immediately to the right of the previous one.
-    ///
-    /// # Arguments
-    /// * `frame` - The drawing buffer.
-    /// * `point` - The top-left starting point of the container.
-    /// * `elems` - A list of nodes to render horizontally.
-    fn horizontal_container(frame: &mut Frame, point: Point, elems: Vec<Node>) {
-        let mut current_x = point.x;
-        for elem in elems {
-            let size = elem.size();
-            elem.render(frame, Point::new(current_x, point.y));
-            current_x += size.width;
-        }
-    }
-
     /// Renders a vertical menu at a specified position on the frame, highlighting the selected item.
     ///
     /// Each menu item is displayed with a radio marker indicating whether it is selected or not.
@@ -270,23 +165,6 @@ impl NodeRenderer {
         Self::text(frame, point, str);
     }
 
-    /// Renders an error message with a red foreground and bold style at a given position.
-    ///
-    /// Used to inform the user of validation or system errors in the UI.
-    ///
-    /// # Arguments
-    ///
-    /// * `frame` - A mutable reference to the [`Frame`] for rendering.
-    /// * `point` - The position where the error message should appear.
-    /// * `str` - The error message text to display.
-    ///
-    /// # Styling
-    ///
-    /// The message will be bold and red using the [`Bold`] and [`NodeTag::Foreground(Color::Red)`] tags.
-    fn error(frame: &mut Frame, point: Point, str: &str) {
-        Self::rich_text(frame, point, str, vec![Bold, Foreground(Color::Red)]);
-    }
-
     fn multiline_text(frame: &mut Frame, point: Point, str: &str) {
         Self::vertical_container(frame, point, str.lines().map(Node::Text).collect())
     }
@@ -307,31 +185,21 @@ impl<'a> Renderable for Node<'a> {
     ///
     /// Each node type determines how its contents are laid out and drawn.
     /// This function delegates the actual rendering to the internal `NodeRenderer`.
-    fn render(self, frame: &mut Frame, point: Point) {
+    fn render(&self, frame: &mut Frame, point: Point) {
         match self {
             Node::None => {}
-            Node::Char(char) => NodeRenderer::char(frame, point, char),
-            Node::RichChar(char, tags) => NodeRenderer::rich_char(frame, point, char, tags),
-            Node::Text(str) => NodeRenderer::text(frame, point, str),
-            Node::RichText(str, tags) => NodeRenderer::rich_text(frame, point, str, tags),
             Node::Tile(tile, rotation, size) => {
                 NodeRenderer::tile(frame, point, tile, rotation, size)
             }
-            Node::VerticalContainer(elems) => NodeRenderer::vertical_container(frame, point, elems),
-            Node::HorizontalContainer(elems) => {
-                NodeRenderer::horizontal_container(frame, point, elems)
-            }
-            Node::FullScreenContainer(elem) => NodeRenderer::fullscreen_container(frame, point, *elem),
-            Node::Framed(elem) => NodeRenderer::framed(frame, point, *elem),
             Node::Menu(elems, selected_index) => {
                 NodeRenderer::menu(frame, point, elems, selected_index)
             }
             Node::Input(str, position) => NodeRenderer::input(frame, point, str, position),
-            Node::Error(str) => NodeRenderer::error(frame, point, str),
             Node::MultiLineText(str) => NodeRenderer::multiline_text(frame, point, str),
             Node::MultiLineRichText(str, tags) => {
                 NodeRenderer::multiline_rich_text(frame, point, str, tags)
             }
+            _ => panic!("Cannot render this node"),
         }
     }
 
@@ -342,29 +210,7 @@ impl<'a> Renderable for Node<'a> {
     fn size(&self) -> Size {
         match self {
             Node::None => Size::new(0, 0),
-            Node::Char(_) | Node::RichChar(_, _) => Size::new(1, 1),
-            Node::Text(str) | Node::RichText(str, _) | Node::Input(str, _) | Node::Error(str) => {
-                Size::new(str.len(), 1)
-            }
             Node::Tile(_, _, size) => Size::new(size.get_size(), size.get_size()),
-            Node::VerticalContainer(elems) => elems
-                .iter()
-                .map(|e| e.size())
-                .fold(Size::new(0, 0), |acc, s| {
-                    Size::new(acc.width.max(s.width), acc.height + s.height)
-                }),
-
-            Node::HorizontalContainer(elems) => elems
-                .iter()
-                .map(|e| e.size())
-                .fold(Size::new(0, 0), |acc, s| {
-                    Size::new(acc.width + s.width, acc.height.max(s.height))
-                }),
-            Node::FullScreenContainer(_) => match size() {
-                Ok((width, height)) => Size::new(width as usize, height as usize),
-                Err(_) => panic!("Cannot get the size of terminal"),
-            },
-            Node::Framed(elem) => elem.size() + Size::new(2, 2),
             Node::Menu(elems, _) => Size::new(
                 elems.iter().map(|s| s.len()).max().unwrap_or(0) + 2,
                 elems.len(),
@@ -373,6 +219,7 @@ impl<'a> Renderable for Node<'a> {
                 let max_line_length = str.lines().map(|l| l.len()).max().unwrap_or(0);
                 Size::new(max_line_length, str.lines().count())
             }
+            _ => panic!("Cannot compute size for this node"),
         }
     }
 }
