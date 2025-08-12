@@ -12,6 +12,7 @@ pub enum ContainerDirection {
 pub enum ContainerProps {
     Size(usize, usize),
     Contained,
+    // TODO
     Centered,
     Top,
     Bottom,
@@ -49,24 +50,38 @@ impl<'a> ContainerRenderer<'a> {
         self.props.push(prop);
         self
     }
+
+    fn contain_props<Predicate>(&self,predicate: Predicate )-> Option<&ContainerProps>
+    where
+        Predicate: Fn(&&ContainerProps) ->bool
+    {
+        self
+            .props
+            .iter()
+            .find(|p|predicate(p) )
+    }
 }
 
 impl<'a> Renderable for ContainerRenderer<'a> {
     fn render(&self, frame: &mut Frame, point: Point) {
+        let start_point = point;
+
+        if let Some()
+
         match self.direction {
             ContainerDirection::Horizontal => {
-                let mut current_x = point.x;
+                let mut current_x = start_point.x;
                 self.childs.iter().for_each(|elem| {
                     let size = elem.size();
-                    elem.render(frame, Point::new(current_x, point.y));
+                    elem.render(frame, Point::new(current_x,start_point .y));
                     current_x += size.width;
                 })
             }
             ContainerDirection::Vertical => {
-                let mut current_y = point.y;
+                let mut current_y = start_point .y;
                 self.childs.iter().for_each(|elem| {
                     let size = elem.size();
-                    elem.render(frame, Point::new(point.x, current_y));
+                    elem.render(frame, Point::new(start_point.x, current_y));
                     current_y += size.height;
                 })
             }
