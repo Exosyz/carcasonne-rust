@@ -30,9 +30,6 @@ pub enum Node<'a> {
     /// A horizontal string with styling tags applied.
     RichText(&'a str, Vec<NodeTag>),
 
-    MultiLineText(&'a str),
-    MultiLineRichText(&'a str, Vec<NodeTag>),
-
     /// A reference to a tile to render.
     Tile(&'a Tile, &'a Rotation, &'a TileSize),
 

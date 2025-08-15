@@ -1,6 +1,8 @@
 mod char_renderer;
 mod container_renderer;
+mod menu_renderer;
 mod node;
+mod none_renderer;
 mod text_renderer;
 mod tile_renderer;
 
@@ -9,7 +11,10 @@ use crate::renderable::char_renderer::CharRenderer;
 use crate::renderable::container_renderer::{
     ContainerDirection, ContainerProps, ContainerRenderer,
 };
+use crate::renderable::menu_renderer::MenuRenderer;
+use crate::renderable::none_renderer::NoneRenderer;
 use crate::renderable::text_renderer::TextRenderer;
+use crate::renderable::tile_renderer::TileRenderer;
 use carcasonne_core::color::Color;
 use carcasonne_core::layout::node::Node;
 use carcasonne_core::layout::node::NodeTag::{Bold, Foreground};
@@ -18,15 +23,15 @@ use carcasonne_core::layout::size::Size;
 
 pub fn get_node_renderer<'a>(node: Node<'a>) -> Box<dyn Renderable + 'a> {
     match node {
-        Node::None => todo!(),
+        Node::None => Box::new(NoneRenderer),
         Node::Char(c) => Box::new(CharRenderer::new(c, vec![])),
         Node::RichChar(c, tags) => Box::new(CharRenderer::new(c, tags)),
-        Node::Text(str) => Box::new(TextRenderer::<'a>::new(str, vec![])),
-        Node::RichText(str, tags) => Box::new(TextRenderer::<'a>::new(str, tags)),
-        Node::Error(str) => Box::new(TextRenderer::<'a>::new(
-            str,
-            vec![Bold, Foreground(Color::Red)],
-        )),
+        Node::Text(str) => Box::new(TextRenderer::<'a>::new(str)),
+        Node::RichText(str, tags) => Box::new(TextRenderer::<'a>::new(str).push_tags(tags)),
+        Node::Error(str) => {
+            Box::new(TextRenderer::<'a>::new(str).push_tags(vec![Bold, Foreground(Color::Red)]))
+        }
+        Node::Input(str, cursor) => Box::new(TextRenderer::new(str).set_cursor(cursor)),
         Node::VerticalContainer(elems) => {
             Box::new(ContainerRenderer::new(ContainerDirection::Vertical).add_nodes(elems))
         }
@@ -38,18 +43,9 @@ pub fn get_node_renderer<'a>(node: Node<'a>) -> Box<dyn Renderable + 'a> {
                 .add_nodes(vec![*elem])
                 .add_props(ContainerProps::Contained),
         ),
-        _ => todo!(),
-        /*
-        Node::Tile(tile, rotation, size) => NodeRenderer::tile(frame, point, tile, rotation, size),
-        Node::Menu(elems, selected_index) => {
-            NodeRenderer::menu(frame, point, elems, selected_index)
-        }
-        Node::Input(str, position) => NodeRenderer::input(frame, point, str, position),
-        Node::MultiLineText(str) => NodeRenderer::multiline_text(frame, point, str),
-        Node::MultiLineRichText(str, tags) => {
-            NodeRenderer::multiline_rich_text(frame, point, str, tags)
-        }
-         */
+        Node::Tile(tile, rotation, size) => Box::new(TileRenderer::new(tile, rotation, size)),
+        Node::Menu(options, selected_index) => Box::new(MenuRenderer::new(options, selected_index)),
+        Node::FullScreenContainer(_) => todo!(),
     }
 }
 

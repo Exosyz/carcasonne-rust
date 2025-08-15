@@ -2,20 +2,55 @@ mod tile_charset;
 mod tile_renderer_helper;
 mod tile_renderer_utils;
 
+use crate::frame::Frame;
 use crate::renderable::tile_renderer::tile_charset::TileCharset;
 use crate::renderable::tile_renderer::tile_renderer_helper::TileRendererHelper;
+use crate::renderable::Renderable;
 use carcasonne_core::layout::point::Point;
+use carcasonne_core::layout::size::Size;
 use carcasonne_core::model::rotation::Rotation;
 use carcasonne_core::model::tile::Tile;
 use carcasonne_core::model::tile_extension::{Abbey, TileExtension};
 use carcasonne_core::model::tile_feature::{
     Road, Shield, TileFeature, TileFeatureEnhancement, Town,
 };
+use carcasonne_core::model::tile_size::TileSize;
 use std::collections::HashMap;
 
-pub struct TileRenderer;
+pub struct TileRenderer<'a> {
+    tile: &'a Tile,
+    rotation: &'a Rotation,
+    size: &'a TileSize,
+}
 
-impl TileRenderer {
+impl<'a> TileRenderer<'a> {
+    pub fn new(tile: &'a Tile, rotation: &'a Rotation, size: &'a TileSize) -> Self {
+        Self {
+            tile,
+            rotation,
+            size,
+        }
+    }
+}
+
+impl<'a> Renderable for TileRenderer<'a> {
+    fn render(&self, frame: &mut Frame, point: Point) {
+        let chars = TileRendererBuilder::build(self.size.get_size(), self.tile, self.rotation);
+
+        chars.iter().enumerate().for_each(|(j, row)| {
+            row.iter()
+                .enumerate()
+                .for_each(|(i, c)| frame.char_simple(point + Point::new(i, j), *c))
+        });
+    }
+
+    fn size(&self) -> Size {
+        Size::new(self.size.get_size(), self.size.get_size())
+    }
+}
+
+struct TileRendererBuilder;
+impl TileRendererBuilder {
     /// Renders a tile using a square grid of placeholder characters.
     ///
     /// This is a stub implementation: the tile is filled with `.` characters
@@ -25,7 +60,7 @@ impl TileRenderer {
     /// * `frame` - The drawing buffer.
     /// * `point` - The top-left corner where the tile will be drawn.
     /// * `tile` - The tile to render
-    pub(crate) fn tile(size: usize, tile: &Tile, rotation: &Rotation) -> Vec<Vec<char>> {
+    fn build(size: usize, tile: &Tile, rotation: &Rotation) -> Vec<Vec<char>> {
         let mut chars = vec![vec!['.'; size]; size];
 
         Self::apply(
@@ -207,7 +242,7 @@ mod tests {
     }
 
     fn assert_tile_render(tile: &Tile, size: usize, expected: &str, rotation: Rotation) {
-        let rendered = TileRenderer::tile(size, &tile, &rotation);
+        let rendered = TileRendererBuilder::build(size, &tile, &rotation);
         let rendered_str = rendered
             .iter()
             .map(|row| row.iter().collect::<String>())

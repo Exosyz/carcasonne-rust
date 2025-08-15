@@ -51,14 +51,11 @@ impl<'a> ContainerRenderer<'a> {
         self
     }
 
-    fn contain_props<Predicate>(&self,predicate: Predicate )-> Option<&ContainerProps>
+    fn contain_prop<Predicate>(&self, predicate: Predicate) -> Option<&ContainerProps>
     where
-        Predicate: Fn(&&ContainerProps) ->bool
+        Predicate: Fn(&&ContainerProps) -> bool,
     {
-        self
-            .props
-            .iter()
-            .find(|p|predicate(p) )
+        self.props.iter().find(|p| predicate(p))
     }
 }
 
@@ -66,19 +63,23 @@ impl<'a> Renderable for ContainerRenderer<'a> {
     fn render(&self, frame: &mut Frame, point: Point) {
         let start_point = point;
 
-        if let Some()
+        if let Some(ContainerProps::Contained) =
+            self.contain_prop(|p| matches!(p, ContainerProps::Contained))
+        {
+            Size::new(2, 2);
+        }
 
         match self.direction {
             ContainerDirection::Horizontal => {
                 let mut current_x = start_point.x;
                 self.childs.iter().for_each(|elem| {
                     let size = elem.size();
-                    elem.render(frame, Point::new(current_x,start_point .y));
+                    elem.render(frame, Point::new(current_x, start_point.y));
                     current_x += size.width;
                 })
             }
             ContainerDirection::Vertical => {
-                let mut current_y = start_point .y;
+                let mut current_y = start_point.y;
                 self.childs.iter().for_each(|elem| {
                     let size = elem.size();
                     elem.render(frame, Point::new(start_point.x, current_y));
@@ -88,20 +89,16 @@ impl<'a> Renderable for ContainerRenderer<'a> {
         }
     }
     fn size(&self) -> Size {
-        let contained_size = if let Some(ContainerProps::Contained) = self
-            .props
-            .iter()
-            .find(|p| matches!(p, ContainerProps::Contained))
+        let contained_size = if let Some(ContainerProps::Contained) =
+            self.contain_prop(|p| matches!(p, ContainerProps::Contained))
         {
             Size::new(2, 2)
         } else {
             Size::new(0, 0)
         };
 
-        let size = if let Some(ContainerProps::Size(width, height)) = self
-            .props
-            .iter()
-            .find(|p| matches!(p, ContainerProps::Size(_, _)))
+        let size = if let Some(ContainerProps::Size(width, height)) =
+            self.contain_prop(|p| matches!(p, ContainerProps::Size(_, _)))
         {
             Size::new(*width, *height)
         } else {
