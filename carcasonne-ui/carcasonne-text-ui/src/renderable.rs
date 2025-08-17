@@ -1,7 +1,6 @@
 mod char_renderer;
 mod container_renderer;
 mod menu_renderer;
-mod node;
 mod none_renderer;
 mod text_renderer;
 mod tile_renderer;
@@ -20,6 +19,7 @@ use carcasonne_core::layout::node::Node;
 use carcasonne_core::layout::node::NodeTag::{Bold, Foreground};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
+use crossterm::terminal::size;
 
 pub fn get_node_renderer<'a>(node: Node<'a>) -> Box<dyn Renderable + 'a> {
     match node {
@@ -45,7 +45,15 @@ pub fn get_node_renderer<'a>(node: Node<'a>) -> Box<dyn Renderable + 'a> {
         ),
         Node::Tile(tile, rotation, size) => Box::new(TileRenderer::new(tile, rotation, size)),
         Node::Menu(options, selected_index) => Box::new(MenuRenderer::new(options, selected_index)),
-        Node::FullScreenContainer(_) => todo!(),
+        Node::FullScreenContainer(elem) => {
+            let (height, width) = size().unwrap();
+            Box::new(
+                ContainerRenderer::new(ContainerDirection::Horizontal)
+                    .add_nodes(vec![*elem])
+                    .add_props(ContainerProps::Contained)
+                    .add_props(ContainerProps::Size(height.into(), width.into())),
+            )
+        }
     }
 }
 

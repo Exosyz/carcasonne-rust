@@ -1,3 +1,4 @@
+use crate::char_drawing::CharDrawing;
 use crate::frame::Frame;
 use crate::renderable::{get_node_renderer, Renderable};
 use carcasonne_core::layout::node::Node;
@@ -12,7 +13,6 @@ pub enum ContainerDirection {
 pub enum ContainerProps {
     Size(usize, usize),
     Contained,
-    // TODO
     Centered,
     Top,
     Bottom,
@@ -57,17 +57,55 @@ impl<'a> ContainerRenderer<'a> {
     {
         self.props.iter().find(|p| predicate(p))
     }
+
+    fn render_container(&self, frame: &mut Frame, point: Point) {
+        let outer_size = self.size();
+
+        if outer_size.width < 2 || outer_size.height < 2 {
+            return;
+        }
+
+        let (x0, y0) = (point.x, point.y);
+        let (x1, y1) = (x0 + outer_size.width - 1, y0 + outer_size.height - 1);
+
+        let h_char = CharDrawing::Horizontal.into();
+        let v_char = CharDrawing::Vertical.into();
+
+        for x in x0..=x1 {
+            let top_char = match x {
+                x if x == x0 => CharDrawing::CornerTopLeft.into(),
+                x if x == x1 => CharDrawing::CornerTopRight.into(),
+                _ => h_char,
+            };
+            let bottom_char = match x {
+                x if x == x0 => CharDrawing::CornerBottomLeft.into(),
+                x if x == x1 => CharDrawing::CornerBottomRight.into(),
+                _ => h_char,
+            };
+
+            frame.char_simple(Point::new(x, y0), top_char);
+            if y1 != y0 {
+                frame.char_simple(Point::new(x, y1), bottom_char);
+            }
+        }
+
+        for y in (y0 + 1)..y1 {
+            frame.char_simple(Point::new(x0, y), v_char);
+            frame.char_simple(Point::new(x1, y), v_char);
+        }
+    }
 }
 
 impl<'a> Renderable for ContainerRenderer<'a> {
     fn render(&self, frame: &mut Frame, point: Point) {
-        let start_point = point;
-
-        if let Some(ContainerProps::Contained) =
+        let start_point = if let Some(ContainerProps::Contained) =
             self.contain_prop(|p| matches!(p, ContainerProps::Contained))
         {
-            Size::new(2, 2);
-        }
+            self.render_container(frame, point);
+            point + Point::new(1, 1)
+        } else {
+            point
+        };
 
         match self.direction {
             ContainerDirection::Horizontal => {
@@ -238,5 +276,104 @@ mod tests {
         let size = c.size();
         assert!(size.width >= 5); // 3 + 2 contained
         assert!(size.height >= 4); // 2 + 2 contained
+    }
+
+    #[test]
+    fn contained_renders_frame_edges() {
+        let nodes = vec![Node::Char('A')];
+        let c = ContainerRenderer::new(ContainerDirection::Horizontal)
+            .add_nodes(nodes)
+            .add_props(ContainerProps::Contained);
+
+        let size = c.size();
+        let mut frame = Frame::new(Size::new(size.width, size.height));
+        c.render(&mut frame, Point::new(0, 0));
+
+        // Vérifie les coins
+        assert_eq!(frame.cells[0][0].symbol, CharDrawing::CornerTopLeft.into());
+        assert_eq!(
+            frame.cells[0][size.width - 1].symbol,
+            CharDrawing::CornerTopRight.into()
+        );
+        assert_eq!(
+            frame.cells[size.height - 1][0].symbol,
+            CharDrawing::CornerBottomLeft.into()
+        );
+        assert_eq!(
+            frame.cells[size.height - 1][size.width - 1].symbol,
+            CharDrawing::CornerBottomRight.into()
+        );
+
+        // Vérifie les lignes horizontales
+        for x in 1..(size.width - 1) {
+            assert_eq!(frame.cells[0][x].symbol, CharDrawing::Horizontal.into());
+            assert_eq!(
+                frame.cells[size.height - 1][x].symbol,
+                CharDrawing::Horizontal.into()
+            );
+        }
+
+        // Vérifie les lignes verticales
+        for y in 1..(size.height - 1) {
+            assert_eq!(frame.cells[y][0].symbol, CharDrawing::Vertical.into());
+            assert_eq!(
+                frame.cells[y][size.width - 1].symbol,
+                CharDrawing::Vertical.into()
+            );
+        }
+    }
+
+    #[test]
+    fn horizontal_container_children_offset_by_contained() {
+        let nodes = vec![Node::Char('A'), Node::Char('B')];
+        let c = ContainerRenderer::new(ContainerDirection::Horizontal)
+            .add_nodes(nodes)
+            .add_props(ContainerProps::Contained);
+
+        let mut frame = Frame::new(c.size());
+        c.render(&mut frame, Point::new(0, 0));
+
+        // Le premier enfant doit être à (1,1) à cause du padding contained
+        assert_eq!(frame.cells[1][1].symbol, 'A');
+        assert_eq!(frame.cells[1][2].symbol, 'B');
+    }
+
+    #[test]
+    fn vertical_container_children_offset_by_contained() {
+        let nodes = vec![Node::Char('X'), Node::Char('Y')];
+        let c = ContainerRenderer::new(ContainerDirection::Vertical)
+            .add_nodes(nodes)
+            .add_props(ContainerProps::Contained);
+
+        let mut frame = Frame::new(c.size());
+        c.render(&mut frame, Point::new(0, 0));
+
+        // Les enfants doivent commencer à (1,1)
+        assert_eq!(frame.cells[1][1].symbol, 'X');
+        assert_eq!(frame.cells[2][1].symbol, 'Y');
+    }
+
+    #[test]
+    fn horizontal_size_accumulates_children_width() {
+        let nodes = vec![Node::Char('A'), Node::Char('B')];
+        let c = ContainerRenderer::new(ContainerDirection::Horizontal).add_nodes(nodes);
+
+        let size = c.size();
+
+        let expected_width = 2;
+        assert_eq!(size.width, expected_width);
+    }
+
+    #[test]
+    fn vertical_size_accumulates_children_height() {
+        let nodes = vec![Node::Char('X'), Node::Char('Y')];
+        let c = ContainerRenderer::new(ContainerDirection::Vertical).add_nodes(nodes);
+
+        let size = c.size();
+
+        let expected_height = 2;
+        let expected_width = 1;
+        assert_eq!(size.height, expected_height);
+        assert_eq!(size.width, expected_width);
     }
 }

@@ -48,7 +48,7 @@ impl State for GameRunningState {
 
                 Node::VerticalContainer(vec![
                     Node::Text("Game Is Running"),
-                    Node::Framed(Box::new(state.draw())),
+                    Node::FullScreenContainer(Box::new(state.draw())),
                 ])
             }
             None => Node::None,
