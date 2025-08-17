@@ -34,7 +34,7 @@ impl<'a> ContainerRenderer<'a> {
             props: vec![],
         }
     }
-    fn add_child(&mut self, child: Box<dyn Renderable + 'a>) -> &Self {
+    fn add_child(&mut self, child: Box<dyn Renderable + 'a>) -> &mut Self {
         self.childs.push(child);
         self
     }
@@ -108,17 +108,135 @@ impl<'a> Renderable for ContainerRenderer<'a> {
                     .iter()
                     .map(|e| e.size())
                     .fold(Size::new(0, 0), |acc, s| {
-                        Size::new(acc.width.max(s.width), acc.height + s.height)
+                        Size::new(acc.width + s.width, acc.height.max(s.height))
                     }),
                 ContainerDirection::Vertical => self
                     .childs
                     .iter()
                     .map(|e| e.size())
                     .fold(Size::new(0, 0), |acc, s| {
-                        Size::new(acc.width + s.width, acc.height.max(s.height))
+                        Size::new(acc.width.max(s.width), acc.height + s.height)
                     }),
             }
         };
         size + contained_size
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::frame::Frame;
+    use carcasonne_core::layout::node::Node;
+    use carcasonne_core::layout::point::Point;
+    use carcasonne_core::layout::size::Size;
+
+    #[test]
+    fn empty_container_has_zero_size() {
+        let c = ContainerRenderer::new(ContainerDirection::Horizontal);
+        assert_eq!(c.size(), Size::new(0, 0));
+
+        let mut frame = Frame::new(Size::new(5, 3));
+        c.render(&mut frame, Point::new(0, 0));
+        for y in 0..3 {
+            for x in 0..5 {
+                assert_eq!(frame.cells[y][x].symbol, ' ');
+            }
+        }
+    }
+
+    #[test]
+    fn horizontal_container_renders_children_side_by_side() {
+        let nodes = vec![Node::Char('A'), Node::Char('B')];
+        let c = ContainerRenderer::new(ContainerDirection::Horizontal)
+            .add_props(ContainerProps::Contained)
+            .add_nodes(nodes);
+
+        let size = c.size();
+        assert!(size.width >= 2);
+        assert!(size.height >= 1);
+
+        let mut frame = Frame::new(Size::new(size.width, size.height));
+        c.render(&mut frame, Point::new(0, 0));
+
+        // Vérifie que les caractères sont présents
+        let mut found_a = false;
+        let mut found_b = false;
+        for y in 0..size.height {
+            for x in 0..size.width {
+                let sym = frame.cells[y][x].symbol;
+                if sym == 'A' {
+                    found_a = true;
+                }
+                if sym == 'B' {
+                    found_b = true;
+                }
+            }
+        }
+        assert!(found_a);
+        assert!(found_b);
+    }
+
+    #[test]
+    fn vertical_container_renders_children_stacked() {
+        let nodes = vec![Node::Char('X'), Node::Char('Y')];
+        let c = ContainerRenderer::new(ContainerDirection::Vertical).add_nodes(nodes);
+
+        let size = c.size();
+        assert!(size.width >= 1);
+        assert!(size.height >= 2);
+
+        let mut frame = Frame::new(Size::new(size.width, size.height));
+        c.render(&mut frame, Point::new(0, 0));
+
+        let mut found_x = false;
+        let mut found_y = false;
+        for y in 0..size.height {
+            for x in 0..size.width {
+                let sym = frame.cells[y][x].symbol;
+                if sym == 'X' {
+                    found_x = true;
+                }
+                if sym == 'Y' {
+                    found_y = true;
+                }
+            }
+        }
+        assert!(found_x);
+        assert!(found_y);
+    }
+
+    #[test]
+    fn contained_adds_extra_size() {
+        let nodes = vec![Node::Char('C')];
+        let c = ContainerRenderer::new(ContainerDirection::Horizontal)
+            .add_nodes(nodes)
+            .add_props(ContainerProps::Contained);
+
+        let size = c.size();
+        assert!(size.width >= 2);
+        assert!(size.height >= 2);
+    }
+
+    #[test]
+    fn size_prop_overrides_children() {
+        let nodes = vec![Node::Char('Z')];
+        let c = ContainerRenderer::new(ContainerDirection::Vertical)
+            .add_nodes(nodes)
+            .add_props(ContainerProps::Size(5, 4));
+
+        assert_eq!(c.size(), Size::new(5, 4));
+    }
+
+    #[test]
+    fn size_and_contained_are_combined() {
+        let nodes = vec![Node::Char('Q')];
+        let c = ContainerRenderer::new(ContainerDirection::Vertical)
+            .add_nodes(nodes)
+            .add_props(ContainerProps::Size(3, 2))
+            .add_props(ContainerProps::Contained);
+
+        let size = c.size();
+        assert!(size.width >= 5); // 3 + 2 contained
+        assert!(size.height >= 4); // 2 + 2 contained
     }
 }

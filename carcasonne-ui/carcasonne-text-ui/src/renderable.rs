@@ -50,6 +50,10 @@ pub fn get_node_renderer<'a>(node: Node<'a>) -> Box<dyn Renderable + 'a> {
 }
 
 /// A trait representing an object that can be rendered onto a `Frame`.
+/// Notes for implementors:
+/// - The `render` method should not attempt to draw outside the bounds of the `Frame`.
+/// - The `size` method must be consistent with what `render` will actually occupy,
+///   otherwise layout engines may misplace or clip the renderable.
 pub trait Renderable {
     /// Renders the object onto the provided frame starting at the specified position.
     ///

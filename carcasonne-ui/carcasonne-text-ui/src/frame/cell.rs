@@ -5,7 +5,7 @@ use crossterm::style::{Attribute, Color, SetAttribute, SetBackgroundColor, SetFo
 
 /// Represents a single character cell in the frame buffer,
 /// including its symbol and optional display attributes (tags).
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Cell {
     /// The character symbol displayed in this cell.
     pub symbol: char,
@@ -63,7 +63,7 @@ impl Cell {
 }
 
 /// Represents different kinds of styling tags that can be applied to a `Cell`.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum CellTag {
     /// Foreground (text) color.
     Foreground(Color),
