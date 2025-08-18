@@ -2,10 +2,11 @@ pub mod cell;
 
 use crate::char_drawing::CharDrawing;
 use crate::frame::cell::{Cell, CellTag};
-use crate::renderable::{get_node_renderer, Renderable};
+use crate::renderable::get_node_renderer;
 use carcasonne_core::layout::node::{Node, NodeTag};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
+use crossterm::terminal::size;
 
 /// A 2D buffer of `Cell`, used for rendering a text-based user interface.
 ///
@@ -109,8 +110,11 @@ impl From<Node<'_>> for Frame {
     /// A `Frame` containing the rendered node.
     fn from(value: Node) -> Self {
         let renderer = get_node_renderer(value);
-        let mut frame = Frame::new(renderer.size());
-        renderer.render(&mut frame, Point::zero());
+        let (height, width) = size().unwrap_or_default();
+        let frame_size = Size::new(width.into(), height.into());
+        let mut frame = Frame::new(renderer.size(frame_size));
+
+        renderer.render(&mut frame, frame_size, Point::zero());
         frame
     }
 }

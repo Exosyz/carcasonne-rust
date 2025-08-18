@@ -11,9 +11,9 @@ use carcasonne_core::layout::size::Size;
 pub struct NoneRenderer;
 
 impl Renderable for NoneRenderer {
-    fn render(&self, _frame: &mut Frame, _point: Point) {}
+    fn render(&self, _frame: &mut Frame, _parent_available_size: Size, _point: Point) {}
 
-    fn size(&self) -> Size {
+    fn size(&self, _parent_available_size: Size) -> Size {
         Size::new(0, 0)
     }
 }
@@ -27,7 +27,7 @@ mod tests {
     #[test]
     fn size_is_always_zero() {
         let r = NoneRenderer;
-        assert_eq!(r.size(), Size::new(0, 0));
+        assert_eq!(r.size(Size::new(50, 50)), Size::new(0, 0));
     }
 
     #[test]
@@ -36,7 +36,7 @@ mod tests {
         let before = frame.cells.clone();
 
         let r = NoneRenderer;
-        r.render(&mut frame, Point::new(1, 1));
+        r.render(&mut frame, Size::new(10, 10), Point::new(1, 1));
 
         assert_eq!(frame.cells, before);
     }
@@ -45,7 +45,7 @@ mod tests {
     fn render_on_empty_frame_is_safe() {
         let mut frame = Frame::new(Size::new(0, 0));
         let r = NoneRenderer;
-        r.render(&mut frame, Point::new(0, 0));
+        r.render(&mut frame, Size::new(10, 10), Point::new(0, 0));
         // No panic, still empty
         assert!(frame.cells.is_empty());
     }

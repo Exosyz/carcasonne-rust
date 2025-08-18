@@ -1,5 +1,5 @@
 use std::iter::Sum;
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 /// A 2D size with width and height, both represented as `usize`.
 ///
@@ -47,6 +47,26 @@ impl Add for Size {
         Size {
             width: self.width + other.width,
             height: self.height + other.height,
+        }
+    }
+}
+
+impl Sub for Size {
+    type Output = Size;
+    /// Adds two `Size` values by summing their width and height independently.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use carcasonne_core::layout::size::Size;
+    ///
+    /// assert_eq!(Size::new(3, 4) - Size::new(5, 6), Size::new(0, 0));
+    /// assert_eq!(Size::new(3, 4) - Size::new(2, 2), Size::new(1, 2));
+    /// ```
+    fn sub(self, other: Size) -> Size {
+        Size {
+            width: self.width.saturating_sub(other.width),
+            height: self.height.saturating_sub(other.height),
         }
     }
 }

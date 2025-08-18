@@ -5,7 +5,7 @@ mod tile_renderer_utils;
 
 use crate::frame::Frame;
 use crate::renderable::tile_renderer::tile_renderer_builder::TileRendererBuilder;
-use crate::renderable::Renderable;
+use crate::renderable::{fit_within_bounds, Renderable};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
 use carcasonne_core::model::rotation::Rotation;
@@ -46,21 +46,26 @@ impl<'a> TileRenderer<'a> {
 }
 
 impl<'a> Renderable for TileRenderer<'a> {
-    fn render(&self, frame: &mut Frame, point: Point) {
+    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) {
         let chars = TileRendererBuilder::build(self.size.get_size(), self.tile, self.rotation);
 
-        chars.iter().enumerate().for_each(|(j, row)| {
-            row.iter()
-                .enumerate()
-                .for_each(|(i, c)| frame.char_simple(point + Point::new(i, j), *c))
-        });
+        chars
+            .iter()
+            .enumerate()
+            .filter(|(j, _)| j < &parent_available_size.height)
+            .for_each(|(j, row)| {
+                row.iter()
+                    .enumerate()
+                    .filter(|(i, _)| i < &parent_available_size.width)
+                    .for_each(|(i, c)| frame.char_simple(point + Point::new(i, j), *c))
+            });
     }
 
-    fn size(&self) -> Size {
-        Size::new(self.size.get_size(), self.size.get_size())
+    fn size(&self, parent_available_size: Size) -> Size {
+        let size = self.size.get_size();
+        fit_within_bounds(Size::new(size, size), parent_available_size)
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -77,6 +82,7 @@ mod tests {
         TileFactory::build_a_abbey()
     }
 
+    // --- new() ---
     #[test]
     fn test_new_initializes_fields() {
         let tile = dummy_tile();
@@ -96,15 +102,26 @@ mod tests {
         let tile = dummy_tile();
         let rot = Rotation::R0;
 
-        let sizes = [TileSize::Small, TileSize::Medium, TileSize::Large];
-
-        for s in sizes.iter() {
+        for s in [TileSize::Small, TileSize::Medium, TileSize::Large].iter() {
             let r = TileRenderer::new(&tile, &rot, s);
             let expected = Size::new(s.get_size(), s.get_size());
-            assert_eq!(r.size(), expected);
+            assert_eq!(r.size(Size::new(50, 50)), expected);
         }
     }
 
+    #[test]
+    fn test_size_respects_parent_bounds() {
+        let tile = dummy_tile();
+        let rot = Rotation::R0;
+        let size = TileSize::Large;
+        let r = TileRenderer::new(&tile, &rot, &size);
+
+        // Large tile but parent only 5x5
+        let bounded = r.size(Size::new(5, 5));
+        assert!(bounded.width <= 5 && bounded.height <= 5);
+    }
+
+    // --- render() ---
     #[test]
     fn test_render_places_chars_in_frame() {
         let tile = dummy_tile();
@@ -113,7 +130,7 @@ mod tests {
         let renderer = TileRenderer::new(&tile, &rot, &size);
 
         let mut frame = Frame::new(Size::new(size.get_size(), size.get_size()));
-        renderer.render(&mut frame, Point::new(0, 0));
+        renderer.render(&mut frame, Size::new(50, 50), Point::new(0, 0));
 
         let mut has_char = false;
         for y in 0..size.get_size() {

@@ -20,8 +20,21 @@
               "icon": "lucide-file",
               "title": "TODO"
             }
+          },
+          {
+            "id": "8e48d7272a389071",
+            "type": "leaf",
+            "state": {
+              "type": "excalidraw",
+              "state": {
+                "file": "Excalidraw/Container renderer.md"
+              },
+              "icon": "excalidraw-icon",
+              "title": "Container renderer"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -165,13 +178,18 @@
       "canvas:Créer une nouvelle toile": false,
       "daily-notes:Ouvrir la note quotidienne": false,
       "templates:Insérer le modèle": false,
-      "command-palette:Ouvrir la palette de commandes": false
+      "command-palette:Ouvrir la palette de commandes": false,
+      "obsidian-excalidraw-plugin:New drawing": false
     }
   },
-  "active": "4f8947ef6c5ab278",
+  "active": "8e48d7272a389071",
   "lastOpenFiles": [
-    "Le playing board.md",
+    "Excalidraw/Container renderer.md",
     "TODO.md",
+    "Excalidraw",
+    "Sans titre.md",
+    "Sans titre",
+    "Le playing board.md",
     "Routes diagonale.md",
     "Bienvenue.md"
   ]
