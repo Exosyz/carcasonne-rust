@@ -31,6 +31,7 @@ impl Renderable for CharRenderer {
         fit_within_bounds(Size::new(1, 1), parent_available_size)
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

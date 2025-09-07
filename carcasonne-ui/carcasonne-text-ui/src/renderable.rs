@@ -21,7 +21,7 @@ use carcasonne_core::layout::node::Node;
 use carcasonne_core::layout::node::NodeTag::{Bold, Foreground};
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
-use crossterm::terminal::size;
+use std::any::Any;
 use std::cmp::min;
 
 pub fn get_node_renderer<'a>(node: Node<'a>) -> Box<dyn Renderable + 'a> {
@@ -44,14 +44,12 @@ pub fn get_node_renderer<'a>(node: Node<'a>) -> Box<dyn Renderable + 'a> {
         Node::Framed(elem) => Box::new(FramedRenderer::new(get_node_renderer(*elem))),
         Node::Tile(tile, rotation, size) => Box::new(TileRenderer::new(tile, rotation, size)),
         Node::Menu(options, selected_index) => Box::new(MenuRenderer::new(options, selected_index)),
-        Node::FullScreenContainer(elem) => {
-            let (height, width) = size().unwrap();
-            Box::new(
-                ContainerRenderer::new(ContainerDirection::Horizontal)
-                    .add_nodes(vec![*elem])
-                    .add_props(ContainerProps::Size(height.into(), width.into())),
-            )
-        }
+        Node::FullScreenContainer(elem) => Box::new(
+            ContainerRenderer::new(ContainerDirection::Horizontal)
+                .add_nodes(vec![*elem])
+                .add_props(ContainerProps::FullSize(ContainerDirection::Horizontal))
+                .add_props(ContainerProps::FullSize(ContainerDirection::Vertical)),
+        ),
     }
 }
 
@@ -81,6 +79,10 @@ pub trait Renderable {
     /// - `parent_available_size` should be taken into account, and the size should
     ///   be clamped if necessary.
     fn size(&self, parent_available_size: Size) -> Size;
+
+    fn as_container(&self) -> Option<&ContainerRenderer<'_>> {
+        None
+    }
 }
 
 fn fit_within_bounds(current: Size, other: Size) -> Size {

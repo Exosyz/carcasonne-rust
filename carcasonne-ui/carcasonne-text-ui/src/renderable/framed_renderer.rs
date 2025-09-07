@@ -74,10 +74,11 @@ impl<'a> Renderable for FramedRenderer<'a> {
     }
 
     fn size(&self, parent_available_size: Size) -> Size {
-        let size = self
-            .child
-            .size(parent_available_size.clone() - Size::new(2, 2))
-            + Size::new(2, 2);
+        if parent_available_size.width < 2 || parent_available_size.height < 2 {
+            return self.child.size(parent_available_size);
+        }
+
+        let size = self.child.size(parent_available_size - Size::new(2, 2)) + Size::new(2, 2);
 
         Size::new(
             min(size.width, parent_available_size.width),

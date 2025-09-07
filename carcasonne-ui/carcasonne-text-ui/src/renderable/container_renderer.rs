@@ -1,16 +1,30 @@
+mod tests;
+
 use crate::frame::Frame;
 use crate::renderable::{get_node_renderer, Renderable};
 use carcasonne_core::layout::node::Node;
 use carcasonne_core::layout::point::Point;
 use carcasonne_core::layout::size::Size;
 
+/// Defines the primary layout direction of a container.
+///
+/// - [`Horizontal`] — children are placed side by side, advancing along the X axis.
+/// - [`Vertical`] — children are placed on top of each other, advancing along the Y axis.
 pub enum ContainerDirection {
     Horizontal,
     Vertical,
 }
 
+/// Defines layout properties that can be applied to a container.
+///
+/// These properties influence how the container itself or its children
+/// should behave when computing size and rendering.
+///
+/// - [`FullSize(ContainerDirection)`] — expands to take all available space in a given direction.
+/// - [`Centered`] — aligns content in the center (not yet implemented).
+/// - [`Top`], [`Bottom`], [`Left`], [`Right`] — alignment hints for positioning
 pub enum ContainerProps {
-    Size(usize, usize),
+    FullSize(ContainerDirection),
     Centered,
     Top,
     Bottom,
@@ -18,63 +32,58 @@ pub enum ContainerProps {
     Right,
 }
 
-/// A container that lays out multiple [`Renderable`] children either horizontally or vertically,
-/// optionally applying layout properties.
+/// Internal structure used to analyze the layout of a container before rendering.
 ///
-/// `ContainerRenderer` allows composing multiple renderable elements in a flexible layout.
-/// Each child is rendered sequentially in the chosen direction, and the total container size
-/// is computed from the children or overridden using [`ContainerProps::Size`].
+/// - [`non_full_sized_size`] — total accumulated size of children that do not expand.
+/// - [`full_sized_count`] — number of children marked with [`ContainerProps::FullSize`].
+struct LayoutAnalysis {
+    non_full_sized_size: Size,
+    full_sized_count: usize,
+}
+
+/// Type alias for a cursor advancement function.
 ///
-/// # Directions
-/// - `ContainerDirection::Horizontal`: children laid out side by side.
-/// - `ContainerDirection::Vertical`: children stacked vertically.
+/// An `AdvanceCursor` shifts the rendering position and reduces
+/// the remaining available space after a child has been rendered.
+type AdvanceCursor = Box<dyn FnMut(&mut Size, &mut Point, Size)>;
+
+/// Type alias for a size accumulator function.
 ///
-/// # Properties (`ContainerProps`)
-/// - `Size(width, height)`: explicitly sets the container's size.
-/// - `Centered`, `Top`, `Bottom`, `Left`, `Right`: control the positioning of children inside the container.
+/// A `SizeAccumulator` combines the size of children into a cumulative size,
+/// used during layout analysis.
+type SizeAccumulator = Box<dyn FnMut(&mut Size, Size)>;
+
+/// A container renderer that arranges child [`Renderable`] elements
+/// either horizontally or vertically, applying layout properties as needed.
 ///
-/// # Behavior
-/// - The container respects the `parent_available_size` when rendering.
-/// - Children can be offset or aligned according to the applied properties.
-/// - The size returned by [`size`] matches the actual space used during [`render`]
+/// Containers can be nested to create complex layouts. Each child can be
+/// another container or a leaf renderer (e.g., text, framed element).
 pub struct ContainerRenderer<'a> {
-    childs: Vec<Box<dyn Renderable + 'a>>,
+    children: Vec<Box<dyn Renderable + 'a>>,
     direction: ContainerDirection,
     props: Vec<ContainerProps>,
 }
 
 impl<'a> ContainerRenderer<'a> {
-    /// Creates a new container with the specified direction.
-    ///
-    /// # Parameters
-    /// - `direction`: whether children are laid out horizontally or vertically.
+    /// Creates a new container with the given direction.
     pub fn new(direction: ContainerDirection) -> Self {
         Self {
             direction,
-            childs: vec![],
+            children: vec![],
             props: vec![],
         }
     }
 
-    /// Adds a single child renderable to the container.
+    /// Adds a child [`Renderable`] element to the container.
     ///
-    /// # Parameters
-    /// - `child`: a boxed renderable to be added.
-    ///
-    /// # Returns
-    /// Returns a mutable reference to self for chaining.
+    /// Typically used with `Box::new(TextRenderer::new(...))`
+    /// or nested containers.
     fn add_child(&mut self, child: Box<dyn Renderable + 'a>) -> &mut Self {
-        self.childs.push(child);
+        self.children.push(child);
         self
     }
 
-    /// Converts a list of layout [`Node`]s into renderables and adds them as children.
-    ///
-    /// # Parameters
-    /// - `nodes`: the nodes to convert and add.
-    ///
-    /// # Returns
-    /// Self with added children.
+    /// Converts a list of [`Node`]s into renderable children and adds them.
     pub fn add_nodes(mut self, nodes: Vec<Node<'a>>) -> Self {
         nodes.into_iter().for_each(|node| {
             self.add_child(get_node_renderer(node));
@@ -82,193 +91,248 @@ impl<'a> ContainerRenderer<'a> {
         self
     }
 
-    /// Adds a layout property to the container.
+    /// Adds a layout property ([`ContainerProps`]) to the container.
     ///
-    /// # Parameters
-    /// - `prop`: the property to add (e.g., alignment, fixed size).
-    ///
-    /// # Returns
-    /// Self with the added property.
+    /// Useful for marking a container as full-size in a direction.
     pub fn add_props(mut self, prop: ContainerProps) -> Self {
         self.props.push(prop);
         self
     }
 
-    /// Helper to check if a property matching a predicate exists.
-    ///
-    /// # Parameters
-    /// - `predicate`: a function to test each property.
-    ///
-    /// # Returns
-    /// `Some(&ContainerProps)` if a matching property exists, otherwise `None`.
+    /// Checks if the container has a property matching the given predicate.
     fn contain_prop<Predicate>(&self, predicate: Predicate) -> Option<&ContainerProps>
     where
-        Predicate: Fn(&&ContainerProps) -> bool,
+        Predicate: Fn(&ContainerProps) -> bool,
     {
         self.props.iter().find(|p| predicate(p))
+    }
+
+    /// Returns true if the container has at least one [`FullSize`] property.
+    fn has_full_size_prop(&self) -> bool {
+        self.contain_prop(|p| matches!(p, ContainerProps::FullSize(_)))
+            .is_some()
+    }
+
+    /// Returns true if the container has a [`FullSize`] property in the given direction.
+    fn has_full_size_in_direction(&self, direction: ContainerDirection) -> bool {
+        self.contain_prop(|p| matches!(p, ContainerProps::FullSize(d) if std::mem::discriminant(d) == std::mem::discriminant(&direction)))
+            .is_some()
+    }
+
+    /// Creates the function responsible for advancing the cursor
+    /// after rendering a child in the container’s direction.
+    fn create_advance_cursor(&self) -> AdvanceCursor {
+        match self.direction {
+            ContainerDirection::Horizontal => Box::new(
+                |available_size: &mut Size, position: &mut Point, child_size: Size| {
+                    position.x += child_size.width;
+                    available_size.width -= child_size.width;
+                },
+            ),
+            ContainerDirection::Vertical => Box::new(
+                |available_size: &mut Size, position: &mut Point, child_size: Size| {
+                    position.y += child_size.height;
+                    available_size.height -= child_size.height;
+                },
+            ),
+        }
+    }
+
+    /// Creates the function that accumulates the size of non-full-size children.
+    fn create_size_accumulator(&self) -> SizeAccumulator {
+        match self.direction {
+            ContainerDirection::Horizontal => {
+                Box::new(|accumulated_size: &mut Size, child_size: Size| {
+                    accumulated_size.width += child_size.width;
+                    accumulated_size.height = accumulated_size.height.max(child_size.height);
+                })
+            }
+            ContainerDirection::Vertical => {
+                Box::new(|accumulated_size: &mut Size, child_size: Size| {
+                    accumulated_size.height += child_size.height;
+                    accumulated_size.width = accumulated_size.width.max(child_size.width);
+                })
+            }
+        }
+    }
+
+    /// Analyzes the container’s children to calculate:
+    /// - total size of fixed-size children,
+    /// - number of children with full-size properties.
+    fn analyze_layout(&self, parent_available_size: Size) -> LayoutAnalysis {
+        let mut analysis = LayoutAnalysis {
+            non_full_sized_size: Size::new(0, 0),
+            full_sized_count: 0,
+        };
+
+        let mut size_accumulator = self.create_size_accumulator();
+
+        for child in self.children.iter() {
+            if let Some(container) = child.as_container() {
+                if container.has_full_size_prop() {
+                    analysis.full_sized_count += 1;
+                } else {
+                    let child_size = child.size(parent_available_size);
+                    size_accumulator(&mut analysis.non_full_sized_size, child_size);
+                }
+            } else {
+                let child_size = child.size(parent_available_size);
+                size_accumulator(&mut analysis.non_full_sized_size, child_size);
+            }
+        }
+
+        analysis
+    }
+
+    /// Computes the maximum size available for full-size children
+    /// by dividing remaining space equally among them.
+    fn calculate_max_full_size(&self, parent_size: Size, analysis: &LayoutAnalysis) -> Size {
+        if analysis.full_sized_count == 0 {
+            return parent_size;
+        }
+
+        match self.direction {
+            ContainerDirection::Horizontal => Size::new(
+                (parent_size.width - analysis.non_full_sized_size.width)
+                    / analysis.full_sized_count,
+                parent_size.height,
+            ),
+            ContainerDirection::Vertical => Size::new(
+                parent_size.width,
+                (parent_size.height - analysis.non_full_sized_size.height)
+                    / analysis.full_sized_count,
+            ),
+        }
+    }
+
+    /// Determines the actual size of a full-size container child,
+    /// taking into account whether it expands horizontally, vertically, or both.
+    fn get_full_size_container_size(
+        &self,
+        container: &ContainerRenderer<'a>,
+        max_full_size: Size,
+        current_size: Size,
+    ) -> Size {
+        let is_vertical = container.has_full_size_in_direction(ContainerDirection::Vertical);
+        let is_horizontal = container.has_full_size_in_direction(ContainerDirection::Horizontal);
+
+        match (is_vertical, is_horizontal) {
+            (true, true) => max_full_size,
+            (true, false) => Size::new(
+                if current_size.width > max_full_size.width {
+                    max_full_size.width
+                } else {
+                    current_size.width
+                },
+                max_full_size.height,
+            ),
+            (false, true) => Size::new(
+                max_full_size.width,
+                if current_size.height > max_full_size.height {
+                    max_full_size.height
+                } else {
+                    current_size.height
+                },
+            ),
+            (false, false) => {
+                panic!("Container marked as full-size but has no full-size properties")
+            }
+        }
+    }
+
+    /// Renders a single child and returns its actual rendered size.
+    ///
+    /// Handles both normal children and full-size children,
+    /// applying the correct computed size.
+    fn render_child(
+        &self,
+        child: &(dyn Renderable + 'a),
+        frame: &mut Frame,
+        available_size: Size,
+        position: Point,
+        max_full_size: Size,
+        current_size: Size,
+    ) -> Size {
+        if let Some(container) = child.as_container() {
+            if container.has_full_size_prop() {
+                let container_size =
+                    self.get_full_size_container_size(container, max_full_size, current_size);
+                container.render(frame, container_size, position);
+                container_size
+            } else {
+                let child_size = child.size(available_size);
+                child.render(frame, available_size, position);
+                child_size
+            }
+        } else {
+            let child_size = child.size(available_size);
+            child.render(frame, available_size, position);
+            child_size
+        }
     }
 }
 
 impl<'a> Renderable for ContainerRenderer<'a> {
     fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) {
-        let start_point = point;
-        let mut current_size = parent_available_size;
+        let mut current_point = point;
+        let mut current_size = self.size(parent_available_size);
+        let mut advance_cursor = self.create_advance_cursor();
 
-        match self.direction {
-            ContainerDirection::Horizontal => {
-                let mut current_x = start_point.x;
-                self.childs.iter().for_each(|elem| {
-                    let size = elem.size(current_size);
-                    elem.render(frame, current_size, Point::new(current_x, start_point.y));
-                    current_x += size.width;
-                    current_size.width -= size.width;
-                })
-            }
-            ContainerDirection::Vertical => {
-                let mut current_y = start_point.y;
-                self.childs.iter().for_each(|elem| {
-                    let size = elem.size(current_size);
-                    elem.render(frame, current_size, Point::new(start_point.x, current_y));
-                    current_y += size.height;
-                    current_size.height -= size.height;
-                })
-            }
+        // Analyze layout
+        let analysis = self.analyze_layout(current_size);
+        let max_full_size = self.calculate_max_full_size(current_size, &analysis);
+
+        // Render each child
+        for child in self.children.iter() {
+            let actual_child_size = self.render_child(
+                &**child,
+                frame,
+                current_size,
+                current_point,
+                max_full_size,
+                current_size,
+            );
+
+            advance_cursor(&mut current_size, &mut current_point, actual_child_size);
         }
     }
     fn size(&self, parent_available_size: Size) -> Size {
-        if let Some(ContainerProps::Size(width, height)) =
-            self.contain_prop(|p| matches!(p, ContainerProps::Size(_, _)))
-        {
-            Size::new(*width, *height)
-        } else {
+        let analysis = self.analyze_layout(parent_available_size);
+
+        let mut final_size = analysis.non_full_sized_size;
+
+        // If we have full-size children, adjust dimensions accordingly
+        if analysis.full_sized_count > 0 {
             match self.direction {
-                ContainerDirection::Horizontal => self
-                    .childs
-                    .iter()
-                    .map(|e| e.size(parent_available_size))
-                    .fold(Size::new(0, 0), |acc, s| {
-                        Size::new(acc.width + s.width, acc.height.max(s.height))
-                    }),
-                ContainerDirection::Vertical => self
-                    .childs
-                    .iter()
-                    .map(|e| e.size(parent_available_size))
-                    .fold(Size::new(0, 0), |acc, s| {
-                        Size::new(acc.width.max(s.width), acc.height + s.height)
-                    }),
+                ContainerDirection::Horizontal => {
+                    final_size.width = parent_available_size.width;
+                }
+                ContainerDirection::Vertical => {
+                    final_size.height = parent_available_size.height;
+                }
             }
         }
-    }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::frame::Frame;
-    use crate::renderable::Renderable;
-    use carcasonne_core::layout::node::Node;
-    use carcasonne_core::layout::point::Point;
-    use carcasonne_core::layout::size::Size;
+        // Apply the container's own full-size properties
+        let container_width = if self.has_full_size_in_direction(ContainerDirection::Horizontal) {
+            parent_available_size.width
+        } else {
+            final_size.width
+        };
 
-    fn simple_char_node(c: char) -> Node<'static> {
-        Node::Char(c)
-    }
+        let container_height = if self.has_full_size_in_direction(ContainerDirection::Vertical) {
+            parent_available_size.height
+        } else {
+            final_size.height
+        };
 
-    #[test]
-    fn empty_container_has_zero_size() {
-        let container = ContainerRenderer::new(ContainerDirection::Horizontal);
-        assert_eq!(container.size(Size::new(10, 10)), Size::new(0, 0));
-
-        let mut frame = Frame::new(Size::new(10, 10));
-        container.render(&mut frame, Size::new(10, 10), Point::new(0, 0));
-
-        for y in 0..10 {
-            for x in 0..10 {
-                assert_eq!(frame.cells[y][x].symbol, ' ');
-            }
-        }
+        Size::new(
+            container_width.min(parent_available_size.width),
+            container_height.min(parent_available_size.height),
+        )
     }
 
-    #[test]
-    fn horizontal_container_accumulates_width() {
-        let container = ContainerRenderer::new(ContainerDirection::Horizontal)
-            .add_nodes(vec![simple_char_node('A'), simple_char_node('B')]);
-        let size = container.size(Size::new(10, 10));
-        assert_eq!(size.width, 2);
-        assert_eq!(size.height, 1);
-    }
-
-    #[test]
-    fn vertical_container_accumulates_height() {
-        let container = ContainerRenderer::new(ContainerDirection::Vertical)
-            .add_nodes(vec![simple_char_node('X'), simple_char_node('Y')]);
-        let size = container.size(Size::new(10, 10));
-        assert_eq!(size.width, 1);
-        assert_eq!(size.height, 2);
-    }
-
-    #[test]
-    fn size_prop_overrides_children_size() {
-        let container = ContainerRenderer::new(ContainerDirection::Horizontal)
-            .add_nodes(vec![simple_char_node('A'), simple_char_node('B')])
-            .add_props(ContainerProps::Size(5, 3));
-        let size = container.size(Size::new(10, 10));
-        assert_eq!(size, Size::new(5, 3));
-    }
-
-    #[test]
-    fn horizontal_children_render_side_by_side() {
-        let container = ContainerRenderer::new(ContainerDirection::Horizontal)
-            .add_nodes(vec![simple_char_node('A'), simple_char_node('B')]);
-
-        let mut frame = Frame::new(container.size(Size::new(10, 10)));
-        container.render(&mut frame, Size::new(10, 10), Point::new(0, 0));
-
-        assert_eq!(frame.cells[0][0].symbol, 'A');
-        assert_eq!(frame.cells[0][1].symbol, 'B');
-    }
-
-    #[test]
-    fn vertical_children_render_stacked() {
-        let container = ContainerRenderer::new(ContainerDirection::Vertical)
-            .add_nodes(vec![simple_char_node('X'), simple_char_node('Y')]);
-
-        let mut frame = Frame::new(container.size(Size::new(10, 10)));
-        container.render(&mut frame, Size::new(10, 10), Point::new(0, 0));
-
-        assert_eq!(frame.cells[0][0].symbol, 'X');
-        assert_eq!(frame.cells[1][0].symbol, 'Y');
-    }
-
-    #[test]
-    fn rendering_respects_parent_bounds() {
-        let container = ContainerRenderer::new(ContainerDirection::Horizontal).add_nodes(vec![
-            simple_char_node('A'),
-            simple_char_node('B'),
-            simple_char_node('C'),
-        ]);
-
-        let mut frame = Frame::new(Size::new(2, 1));
-        container.render(&mut frame, Size::new(2, 1), Point::new(0, 0));
-
-        // Only first two chars fit
-        assert_eq!(frame.cells[0][0].symbol, 'A');
-        assert_eq!(frame.cells[0][1].symbol, 'B');
-    }
-
-    #[test]
-    fn multiple_props_are_stored_and_queryable() {
-        let container = ContainerRenderer::new(ContainerDirection::Vertical)
-            .add_props(ContainerProps::Centered)
-            .add_props(ContainerProps::Top);
-
-        assert!(matches!(
-            container.contain_prop(|p| matches!(p, ContainerProps::Centered)),
-            Some(_)
-        ));
-        assert!(matches!(
-            container.contain_prop(|p| matches!(p, ContainerProps::Top)),
-            Some(_)
-        ));
+    fn as_container(&self) -> Option<&ContainerRenderer<'a>> {
+        Some(self)
     }
 }

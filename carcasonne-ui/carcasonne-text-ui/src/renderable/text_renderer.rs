@@ -67,6 +67,7 @@ impl<'a> Renderable for TextRenderer<'a> {
         )
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

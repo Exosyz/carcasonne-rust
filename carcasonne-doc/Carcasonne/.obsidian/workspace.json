@@ -32,9 +32,20 @@
               "icon": "excalidraw-icon",
               "title": "Container renderer"
             }
+          },
+          {
+            "id": "1953d8517163521f",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.9.10"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.9.10"
+            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -173,6 +184,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "bases:Create new base": false,
       "switcher:Ouvrir le sélecteur rapide": false,
       "graph:Ouvrir la vue graphique": false,
       "canvas:Créer une nouvelle toile": false,
@@ -182,7 +194,7 @@
       "obsidian-excalidraw-plugin:New drawing": false
     }
   },
-  "active": "8e48d7272a389071",
+  "active": "4f8947ef6c5ab278",
   "lastOpenFiles": [
     "Excalidraw/Container renderer.md",
     "TODO.md",

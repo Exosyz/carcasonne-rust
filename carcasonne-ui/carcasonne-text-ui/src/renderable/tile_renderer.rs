@@ -66,6 +66,7 @@ impl<'a> Renderable for TileRenderer<'a> {
         fit_within_bounds(Size::new(size, size), parent_available_size)
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

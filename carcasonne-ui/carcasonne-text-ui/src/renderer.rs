@@ -29,11 +29,11 @@ use std::io::Write;
 /// * `W`: The output stream implementing `Write`. This allows flexibility
 ///   in where the output is sent (stdout, buffer, tests, etc.).
 #[derive(Default, Debug)]
-pub struct TextRenderer<W: Write> {
+pub struct ConsoleRenderer<W: Write> {
     out: W,
 }
 
-impl<W: Write> TextRenderer<W> {
+impl<W: Write> ConsoleRenderer<W> {
     /// Creates a new `TextRenderer`, enabling raw mode and switching
     /// to the alternate screen buffer.
     ///
@@ -51,7 +51,7 @@ impl<W: Write> TextRenderer<W> {
     }
 }
 
-impl<W: Write> Drop for TextRenderer<W> {
+impl<W: Write> Drop for ConsoleRenderer<W> {
     /// Disables raw mode and leaves the alternate screen buffer
     /// to restore the terminal to its original state.
     fn drop(&mut self) {
@@ -60,7 +60,7 @@ impl<W: Write> Drop for TextRenderer<W> {
     }
 }
 
-impl<W: Write> Renderer for TextRenderer<W> {
+impl<W: Write> Renderer for ConsoleRenderer<W> {
     /// Renders the given root `Node` by converting it into a `Frame`,
     /// then printing each cell's symbol with its styles at the correct
     /// terminal position.
@@ -114,7 +114,7 @@ mod tests {
     fn test_render_char_node() {
         let mut buffer = Cursor::new(vec![]);
         {
-            let mut renderer = TextRenderer::new(&mut buffer);
+            let mut renderer = ConsoleRenderer::new(&mut buffer);
             let node = Node::Char('X');
             renderer.render(node);
         }
