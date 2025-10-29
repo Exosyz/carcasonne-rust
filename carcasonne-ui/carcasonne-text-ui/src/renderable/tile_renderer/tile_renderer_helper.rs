@@ -837,7 +837,6 @@ mod tests {
 
         // Render road first
         TileRendererHelper::render_road_edges(size, &mut map, &edges);
-        let initial_count = map.len();
 
         // Then render abbey
         TileRendererHelper::render_abbey_extension(size, &mut map);

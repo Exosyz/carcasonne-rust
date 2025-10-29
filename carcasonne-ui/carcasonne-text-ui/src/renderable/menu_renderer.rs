@@ -1,7 +1,7 @@
 use crate::char_drawing::CharDrawing;
 use crate::frame::Frame;
 use crate::renderable::container_renderer::{ContainerDirection, ContainerRenderer};
-use crate::renderable::Renderable;
+use crate::renderable::{get_node_renderer, Renderable};
 use carcasonne_core::layout::node::Node;
 use carcasonne_core::layout::node::NodeTag::Underline;
 use carcasonne_core::layout::point::Point;
@@ -23,8 +23,8 @@ impl<'a> MenuRenderer<'a> {
 }
 
 impl<'a> Renderable for MenuRenderer<'a> {
-    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) {
-        let built_menu = self
+    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) -> Size {
+        let childs = self
             .elems
             .iter()
             .enumerate()
@@ -43,11 +43,14 @@ impl<'a> Renderable for MenuRenderer<'a> {
                     },
                 ])
             })
+            .map(|node| get_node_renderer(node))
             .collect();
 
-        ContainerRenderer::new(ContainerDirection::Vertical)
-            .add_nodes(built_menu)
-            .render(frame, parent_available_size, point);
+        ContainerRenderer::new(ContainerDirection::Vertical, childs, vec![]).render(
+            frame,
+            parent_available_size,
+            point,
+        )
     }
 
     fn size(&self, parent_available_size: Size) -> Size {
@@ -57,6 +60,26 @@ impl<'a> Renderable for MenuRenderer<'a> {
                 parent_available_size.width,
             ),
             min(self.elems.len(), parent_available_size.height),
+        )
+    }
+
+    fn debug(&self, size: usize) -> String {
+        let ident = "\t".repeat(size);
+        let indent_inner = "\t".repeat(size + 1);
+
+        let elems = self
+            .elems
+            .iter()
+            .map(|s| format!("\"{}\"", s))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!(
+            "{ident}MenuRenderer {{\n\
+             {indent_inner}elems: [{elems}],\n\
+             {indent_inner}selected_index: {}\n\
+             {ident}}}\n",
+            self.selected_index,
         )
     }
 }

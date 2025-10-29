@@ -46,7 +46,7 @@ impl<'a> TileRenderer<'a> {
 }
 
 impl<'a> Renderable for TileRenderer<'a> {
-    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) {
+    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) -> Size {
         let chars = TileRendererBuilder::build(self.size.get_size(), self.tile, self.rotation);
 
         chars
@@ -59,11 +59,27 @@ impl<'a> Renderable for TileRenderer<'a> {
                     .filter(|(i, _)| i < &parent_available_size.width)
                     .for_each(|(i, c)| frame.char_simple(point + Point::new(i, j), *c))
             });
+
+        Size::new(self.size.get_size(), self.size.get_size())
     }
 
     fn size(&self, parent_available_size: Size) -> Size {
         let size = self.size.get_size();
         fit_within_bounds(Size::new(size, size), parent_available_size)
+    }
+
+    fn debug(&self, tabs: usize) -> String {
+        let indent = " ".repeat(tabs);
+        let indent_inner = " ".repeat(tabs);
+
+        format!(
+            "{indent}TileRenderer {{\n\
+             {indent_inner}tile: \"{:#?}\",\n\
+             {indent_inner}rotation: [{:?}],\n\
+             {indent_inner}size: {:?}\n\
+             {indent}}}\n",
+            self.tile, self.rotation, self.size,
+        )
     }
 }
 

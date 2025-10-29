@@ -20,15 +20,36 @@ impl CharRenderer {
 }
 
 impl Renderable for CharRenderer {
-    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) {
+    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) -> Size {
         if parent_available_size.width < 1 || parent_available_size.height < 1 {
-            return;
+            return Size::new(0, 0);
         }
         frame.char(point, self.symbol, &self.tags);
+        Size::new(1, 1)
     }
 
     fn size(&self, parent_available_size: Size) -> Size {
         fit_within_bounds(Size::new(1, 1), parent_available_size)
+    }
+
+    fn debug(&self, tabs: usize) -> String {
+        let indent = "\t".repeat(tabs);
+        let indent_inner = "\t".repeat(tabs + 1);
+
+        let tags = self
+            .tags
+            .iter()
+            .map(|t| format!("{:?}", t))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!(
+            "{indent}CharRenderer {{\n\
+             {indent_inner}symbol: \"{}\",\n\
+             {indent_inner}tags: [{tags}],\n\
+             {indent}}}\n",
+            self.symbol,
+        )
     }
 }
 

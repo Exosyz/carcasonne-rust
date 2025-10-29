@@ -11,10 +11,18 @@ use carcasonne_core::layout::size::Size;
 pub struct NoneRenderer;
 
 impl Renderable for NoneRenderer {
-    fn render(&self, _frame: &mut Frame, _parent_available_size: Size, _point: Point) {}
+    fn render(&self, _frame: &mut Frame, _parent_available_size: Size, _point: Point) -> Size {
+        Size::new(0, 0)
+    }
 
     fn size(&self, _parent_available_size: Size) -> Size {
         Size::new(0, 0)
+    }
+
+    fn debug(&self, tabs: usize) -> String {
+        let indent = "\t".repeat(tabs);
+
+        format!("{indent}NoneRenderer {{}}")
     }
 }
 

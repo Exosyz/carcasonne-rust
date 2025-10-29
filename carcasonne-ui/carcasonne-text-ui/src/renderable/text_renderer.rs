@@ -43,20 +43,32 @@ impl<'a> TextRenderer<'a> {
 }
 
 impl<'a> Renderable for TextRenderer<'a> {
-    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) {
+    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) -> Size {
         if let Some(cursor) = self.cursor {
             frame.set_cursor(Some(point + cursor));
         }
-        self.str
+
+        let mut max_width = 0;
+        let mut height = 0;
+
+        for (j, row) in self
+            .str
             .lines()
+            .take(parent_available_size.height)
             .enumerate()
-            .filter(|(j, _)| j < &parent_available_size.height)
-            .for_each(|(j, row)| {
-                row.chars()
-                    .enumerate()
-                    .filter(|(i, _)| i < &parent_available_size.width)
-                    .for_each(|(i, c)| frame.char(point + Point::new(i, j), c, &self.tags))
-            });
+        {
+            height += 1;
+
+            let mut line_width = 0;
+            for (i, c) in row.chars().take(parent_available_size.width).enumerate() {
+                frame.char(point + Point::new(i, j), c, &self.tags);
+                line_width += 1;
+            }
+
+            max_width = max_width.max(line_width);
+        }
+
+        Size::new(max_width, height)
     }
 
     fn size(&self, parent_available_size: Size) -> Size {
@@ -64,6 +76,32 @@ impl<'a> Renderable for TextRenderer<'a> {
         Size::new(
             min(max_line_length, parent_available_size.width),
             min(self.str.lines().count(), parent_available_size.height),
+        )
+    }
+
+    fn debug(&self, tabs: usize) -> String {
+        let indent = "\t".repeat(tabs);
+        let indent_inner = "\t".repeat(tabs + 1);
+
+        let tags = self
+            .tags
+            .iter()
+            .map(|t| format!("{:?}", t))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        let cursor = self
+            .cursor
+            .map(|c| format!("{:?}", c))
+            .unwrap_or_else(|| "None".to_string());
+
+        format!(
+            "{indent}TextRenderer {{\n\
+             {indent_inner}str: \"{}\",\n\
+             {indent_inner}tags: [{tags}],\n\
+             {indent_inner}cursor: {cursor}\n\
+             {indent}}}\n",
+            self.str,
         )
     }
 }

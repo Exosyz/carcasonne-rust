@@ -57,9 +57,10 @@ impl Frame {
     fn set_cell(&mut self, point: Point, cell: Cell) {
         assert!(
             point.y < self.size.height && point.x < self.size.width,
-            "Point out of bounds"
+            "Point ({:?}) out of bounds (limit {:?})",
+            point,
+            self.size
         );
-
         self.cells[point.y][point.x] = cell;
     }
 
@@ -94,6 +95,13 @@ impl Frame {
     pub fn set_cursor(&mut self, point: Option<Point>) {
         self.cursor = point;
     }
+
+    pub fn get(&self, point: Point) -> Option<Cell> {
+        if point.y >= self.size.height || point.x >= self.size.width {
+            return None;
+        }
+        Some(self.cells[point.y][point.x].clone())
+    }
 }
 
 impl From<Node<'_>> for Frame {
@@ -110,12 +118,27 @@ impl From<Node<'_>> for Frame {
     /// A `Frame` containing the rendered node.
     fn from(value: Node) -> Self {
         let renderer = get_node_renderer(value);
-        let (height, width) = size().unwrap_or_default();
+        let (width, height) = size().unwrap_or_default();
         let frame_size = Size::new(width.into(), height.into());
         let mut frame = Frame::new(renderer.size(frame_size));
 
         renderer.render(&mut frame, frame_size, Point::zero());
         frame
+    }
+}
+
+pub trait FrameDebug {
+    fn debug(&self);
+}
+
+impl FrameDebug for Frame {
+    fn debug(&self) {
+        for row in &self.cells {
+            for cell in row {
+                print!("{}", cell.symbol);
+            }
+            println!();
+        }
     }
 }
 

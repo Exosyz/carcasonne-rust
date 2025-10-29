@@ -30,11 +30,11 @@ impl<'a> FramedRenderer<'a> {
 }
 
 impl<'a> Renderable for FramedRenderer<'a> {
-    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) {
+    fn render(&self, frame: &mut Frame, parent_available_size: Size, point: Point) -> Size {
         let outer_size = self.size(parent_available_size);
 
         if outer_size.width < 2 || outer_size.height < 2 {
-            return;
+            return Size::new(0, 0);
         }
 
         let (x0, y0) = (point.x, point.y);
@@ -71,6 +71,8 @@ impl<'a> Renderable for FramedRenderer<'a> {
             parent_available_size - Size::new(2, 2),
             Point::new(x0 + 1, y0 + 1),
         );
+
+        outer_size
     }
 
     fn size(&self, parent_available_size: Size) -> Size {
@@ -83,6 +85,18 @@ impl<'a> Renderable for FramedRenderer<'a> {
         Size::new(
             min(size.width, parent_available_size.width),
             min(size.height, parent_available_size.height),
+        )
+    }
+
+    fn debug(&self, tabs: usize) -> String {
+        let ident = "\t".repeat(tabs);
+        let indent_inner = "\t".repeat(tabs + 1);
+
+        let child_debug = self.child.debug(tabs + 2);
+        format!(
+            "{ident}FramedRenderer {{\n\
+             {indent_inner}child: {{\n{child_debug}\
+             {ident}}}}}",
         )
     }
 }

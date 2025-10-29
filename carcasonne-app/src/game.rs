@@ -3,11 +3,12 @@ use carcasonne_core::action::Action;
 use carcasonne_core::context::game_context::GameContext;
 use carcasonne_core::context::main_menu_context::MainMenuContext;
 use carcasonne_core::factory::game_factory::GameTilesFactory;
+use carcasonne_core::layout::node::Node;
 use carcasonne_core::renderer::Renderer;
-use carcasonne_core::state::State;
-use carcasonne_core::state::StateResult::{Exit, Stay, Transition};
 use carcasonne_core::state::game_state::main_menu_state::{MainMenuOptions, MenuState};
 use carcasonne_core::state::shared_state::SharedContext;
+use carcasonne_core::state::State;
+use carcasonne_core::state::StateResult::{Exit, Stay, Transition};
 use std::cell::RefCell;
 
 /// Main game engine struct managing the state and rendering.
@@ -69,7 +70,11 @@ impl<'context, T: Renderer> Game<'context, T> {
 
     /// Renders the current game state using the associated renderer.
     fn rerender(&mut self) {
-        self.renderer.borrow_mut().render(self.state().draw());
+        self.renderer
+            .borrow_mut()
+            .render(Node::Framed(Box::new(Node::FullScreenContainer(Box::new(
+                self.state().draw(),
+            )))));
     }
 
     /// Runs the main game loop.
